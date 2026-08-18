@@ -1,0 +1,48 @@
+.usuario-form-shell {
+	min-height: 100%;
+	display: flex;
+	justify-content: center;
+	padding: 1.5rem 1rem;
+}
+
+.usuario-form-card {
+	width: min(100%, 760px);
+	background: #ffffff;
+	border-radius: 1.25rem;
+	border: 1px solid rgba(148, 163, 184, 0.18);
+	padding: 1.5rem;
+}
+
+.usuario-form-header h3 {
+	font-weight: 700;
+	color: #0f172a;
+}
+
+.usuario-form-grid .form-label {
+	font-weight: 600;
+	color: #334155;
+}
+
+.usuario-form-grid .form-control,
+.usuario-form-grid .form-select {
+	border-radius: 0.9rem;
+	border-color: #cbd5e1;
+}
+
+.usuario-form-grid .form-control:focus,
+.usuario-form-grid .form-select:focus {
+	border-color: #2563eb;
+	box-shadow: 0 0 0 0.18rem rgba(37, 99, 235, 0.12);
+}
+
+.usuario-form-grid .btn-primary {
+	border-radius: 0.95rem;
+	padding-inline: 1.35rem;
+}
+
+@media (max-width: 575.98px) {
+	.usuario-form-card {
+		padding: 1.1rem;
+		border-radius: 1rem;
+	}
+}

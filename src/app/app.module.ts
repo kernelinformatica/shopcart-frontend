@@ -1,0 +1,13 @@
+// ...existing code...
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+
+@NgModule({
+  imports: [
+    CommonModule,
+    // ...other imports...
+  ],
+  // ...existing code...
+})
+export class AppModule { }
+// ...existing code...

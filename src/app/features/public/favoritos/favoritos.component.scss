@@ -1,0 +1,63 @@
+.favoritos-page {
+  .producto-fav-img {
+    width: 100%;
+    height: 260px;
+    max-height: 320px;
+    aspect-ratio: 1.1 / 1;
+    object-fit: cover;
+    object-position: center;
+    background: #f8f9fa;
+    border-radius: 0.7rem 0.7rem 0 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    margin-bottom: 0;
+    display: block;
+  }
+
+  .producto-img-wrap {
+    position: relative;
+  }
+  .marca-overlay {
+    z-index: 2;
+    pointer-events: none;
+    padding: 0.15rem 0.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    font-size: 1.15em;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: rgba(255,255,255,0.92);
+  }
+  .marca-logo-badge {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    margin-right: 0.25rem;
+    background: #fff;
+    border-radius: 50%;
+    border: 1px solid #eee;
+  }
+
+  // Layout lateral de filtros (similar a ofertas)
+  .filtros-layout {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .filtros-aside {
+    margin-bottom: 1.5rem;
+    @media (min-width: 992px) {
+      flex: 0 0 25%;
+      max-width: 25%;
+    }
+  }
+  .filtros-card {
+    border-radius: 0.85rem;
+    position: sticky;
+    top: 6.5rem;
+    transition: transform 0.25s ease, opacity 0.2s ease;
+  }
+  .filtro-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}

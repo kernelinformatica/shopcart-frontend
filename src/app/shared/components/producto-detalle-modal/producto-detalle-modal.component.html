@@ -1,0 +1,256 @@
+<div class="modal fade" id="detalleProductoModal" tabindex="-1" aria-labelledby="detalleProductoModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold" id="detalleProductoModalLabel">{{ selectedProducto?.nombre }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar" (click)="onCerrar()"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-5">
+            <div class="modal-image-wrap mb-3">
+                <div style="position: relative;">
+                  <img [src]="getImagenPrincipal()" class="img-fluid rounded" [alt]="selectedProducto?.nombre">
+                  <!-- Badge Más vendido -->
+                  <div *ngIf="selectedProducto?.masVendido" style="position: absolute; left: 0; bottom: 0; z-index: 2; margin: 8px;">
+                    <span class="badge d-flex align-items-center gap-1 px-2 py-1" style="background: #f7c948; color: #fff; font-size: 0.92em; font-weight: bold; box-shadow: 0 2px 6px #0002; border-radius: 0.6em;">
+                      <img src="assets/icons/crown.svg" alt="Más vendido" width="15" height="15" style="margin-right:2px;"/>
+                      <span style="color:#fff; letter-spacing:0.5px;">MÁS VENDIDO</span>
+                      <span *ngIf="selectedProducto?.cantidadVentas" class="ms-1 fw-normal" style="font-size:0.85em; color:#fff; opacity:0.85;">({{ selectedProducto.cantidadVentas }} ventas)</span>
+                    </span>
+                  </div>
+                  <div class="marca-overlay" *ngIf="getMarcaNombre(selectedProducto)">
+                    <span class="badge bg-light text-dark d-inline-flex align-items-center gap-1">
+                        <ng-container *ngIf="getMarcaLogoPath(selectedProducto) && getMarcaNombre(selectedProducto).toLowerCase() !== 'sin marca' && getMarcaNombre(selectedProducto) !== ''">
+                          <img [src]="getMarcaLogoPath(selectedProducto)"
+                               [alt]="getMarcaNombre(selectedProducto)"
+                               class="marca-logo-badge"
+                               (error)="onMarcaLogoError(selectedProducto, $event)">
+                        </ng-container>
+                        <span *ngIf="!getMarcaLogoPath(selectedProducto)">Marca: {{ getMarcaNombre(selectedProducto) }}</span>
+                    </span>
+                  </div>
+                </div>
+            </div>
+          </div>
+          <div class="col-md-7">
+            <p>{{ selectedProducto?.descripcion_larga || selectedProducto?.descripcion }}</p>
+            <div class="mb-2">
+              <span *ngIf="selectedProducto?.rubro">Rubro: <span class="badge bg-secondary">{{ selectedProducto?.rubro?.nombre }}</span></span>
+              <span *ngIf="selectedProducto?.subrubro"><span class="badge bg-info">{{ selectedProducto?.subrubro?.nombre }}</span></span>
+            </div>
+
+            <div class="mb-2">
+                <!-- PROMOS BADGES -->
+                <div class="mb-1">
+                  <span style="font-size:1.1em;">🏷️</span>
+                  <ng-container *ngIf="otrasPromociones.length > 0">
+                    <ng-container *ngFor="let promo of otrasPromociones">
+                      <span *ngIf="promo.promocionTipo?.alias !== 'cuotas'   && promo.promocionTipo?.alias !== 'banco'" style="font-weight:bold;font-size:0.92em;">
+                        {{ promo.nombre || 'Promoción' }}:
+                        <ng-container *ngIf="promo.acciones && promo.acciones.length">
+                          <ng-container *ngFor="let accion of promo.acciones">
+                            <span *ngIf="accion.detalle" style="font-size:0.97em; color:#198754;"> {{ accion.detalle }}</span>
+                          </ng-container>
+                        </ng-container>
+                      </span>
+                    </ng-container>
+                  </ng-container>
+                </div>
+                <!-- PRECIO Y DESCUENTO -->
+                <ng-container>
+                  <!-- Caso especial: promo x_por_y y cantidad >= umbral -->
+                  <ng-container *ngIf="getPromoXPorY() as promoXPorY">
+                    <ng-container *ngIf="cantidadAgregar >= promoXPorY.valor">
+                      <div>
+                        <span class="text-danger text-decoration-line-through fw-bold me-2">Precio regular: ${{ (selectedProducto?.precio ?? selectedProducto?.precioLista ?? 0) | number:'1.2-2' }}</span>
+                      </div>
+                      <div>
+                        <span class="fw-bold text-success">Precio promo: ${{ getPrecioConDescuento() | number:'1.2-2' }}</span>
+                        <span class="text-secondary ms-1" style="font-size: 0.95rem; font-weight: normal;">C/U por unidad</span>
+                      </div>
+                    </ng-container>
+                    <ng-container *ngIf="!(cantidadAgregar >= promoXPorY.valor)">
+                      <span class="fw-bold text-success fs-2 align-middle">
+                        ${{ getPrecioConDescuento() | number:'1.2-2' }}
+                      </span>
+                    </ng-container>
+                  </ng-container>
+                  <!-- Caso general: sin promo x_por_y -->
+                  <ng-container *ngIf="!getPromoXPorY()">
+                    <span *ngIf="(getDescuentoPromocion() ?? 0) > 0 && ((selectedProducto?.precio ?? selectedProducto?.precioLista ?? 0) > 0)" class="text-muted text-decoration-line-through me-2 fs-6 align-middle" style="font-size: 1.1rem;">
+                      ${{ (selectedProducto?.precio ?? selectedProducto?.precioLista ?? 0) | number:'1.2-2' }}
+                    </span>
+                    <span class="fw-bold text-success fs-2 align-middle">
+                      ${{ getPrecioConDescuento() | number:'1.2-2' }}
+                    </span>
+                    <span *ngIf="(selectedProducto?.precio == null && selectedProducto?.precioLista == null) || ((selectedProducto?.precio ?? selectedProducto?.precioLista ?? 0) === 0)" class="text-danger small">Precio no disponible</span>
+                  </ng-container>
+                </ng-container>
+                <!-- CUOTAS Y TARJETAS -->
+                <div *ngIf="(getCuotasPromocion() ?? 0) > 0" class="cuotas-box d-inline-flex align-items-center gap-2 mt-1 px-2 py-1 rounded">
+                  <span class="fw-bold text-success" style="font-size: 0.97em;">{{ (getCuotasPromocion() ?? 0) | number:'1.0-0' }} cuotas</span>
+                  <span class="fw-bold text-success">de ${{ (getPrecioConDescuento() / (getCuotasPromocion() ?? 1)) | number:'1.2-2' }}</span>
+                  <span class="text-success ms-1">con </span>
+                  <ng-container *ngIf="getTarjetasPromocion().length">
+                    <ng-container *ngFor="let tarjeta of getTarjetasPromocion()">
+                      <img *ngIf="tarjeta.toLowerCase() === 'visa'" src="assets/icons/credit-card-visa.svg" alt="Visa" width="18" height="20%" />
+                      <img *ngIf="tarjeta.toLowerCase() === 'mastercard'" src="assets/icons/credit-card-master.svg" alt="Mastercard" width="20%" />
+                      <img *ngIf="tarjeta.toLowerCase() === 'bbva'" src="assets/icons/credit-card-bbva.svg" alt="BBVA" width="20%" />
+                      <img *ngIf="tarjeta.toLowerCase() !== 'visa' && tarjeta.toLowerCase() !== 'mastercard'  && tarjeta.toLowerCase() !== 'bbva'" src="assets/icons/credit-card.svg" alt="Tarjeta" width="18" height="18" class="ms-2 me-1"/>
+                    </ng-container>
+                  </ng-container>
+                </div>
+                <span *ngIf="selectedProducto?.listaPrecio" class="badge bg-warning text-dark ms-2">Lista: {{ selectedProducto?.listaPrecio?.nombre }}</span>
+                <span *ngIf="selectedProducto?.listaPrecio" class="badge bg-light text-dark ms-1">Estado: {{ selectedProducto?.listaPrecio?.estado }}</span>
+              </div>
+            </div>
+
+            <div class="mb-2" *ngIf="selectedProducto?.promociones?.length">
+              <span *ngFor="let promo of selectedProducto?.promociones" class="badge bg-danger me-1">
+                {{ promo.nombre }} <span *ngIf="promo.tipo === 'porcentaje'">({{ promo.valor }}%)</span>
+                <span *ngIf="promo.tipo === 'monto'">(${{ promo.valor }})</span>
+              </span>
+            </div>
+
+            <div class="mb-2">
+              <span *ngIf="selectedProducto?.codigo_barra">Código de barra: <span class="badge bg-dark">{{ selectedProducto?.codigo_barra }}</span></span>
+              <span *ngIf="selectedProducto?.codigo_qr"> | QR: <span class="badge bg-dark">{{ selectedProducto?.codigo_qr }}</span></span>
+            </div>
+
+            <div class="mb-2">
+              <span *ngIf="getMarcaNombre(selectedProducto)">Marca: <span class="badge bg-secondary">{{ getMarcaNombre(selectedProducto) }}</span></span>
+              <span *ngIf="selectedProducto?.modelo"> | Modelo: <span class="badge bg-secondary">{{ selectedProducto?.modelo }}</span></span>
+            </div>
+
+            <div class="mb-2">
+              <span *ngIf="selectedProducto?.unidad_medida">Unidad: <span class="badge bg-info">{{ selectedProducto?.unidad_medida }}</span></span>
+              <span *ngIf="selectedProducto?.contenido_neto"> | Contenido: <span class="badge bg-info">{{ selectedProducto?.contenido_neto }}</span></span>
+            </div>
+
+            <div class="mb-2">
+              <span *ngIf="selectedProducto?.estado">Estado: <span class="badge bg-success" *ngIf="selectedProducto?.estado === 'activo'">Activo</span><span class="badge bg-danger" *ngIf="selectedProducto?.estado === 'inactivo'">Inactivo</span></span>
+            </div>
+
+
+            <div class="mb-2">
+              <div class="input-group" style="width:180px;">
+                <span class="input-group-text">Cantidad</span>
+                <input
+                  type="number"
+                  min="1"
+                  [ngModel]="cantidadAgregar"
+                  (ngModelChange)="onCantidadPrincipalChange($event)"
+                  class="form-control"
+                />
+              </div>
+            </div>
+
+            <div class="mb-2">
+              <span *ngIf="selectedProducto?.empresa">Empresa: <span class="badge bg-secondary">{{ selectedProducto?.empresa?.nombre }}</span></span>
+              <span *ngIf="selectedProducto?.apps?.length"> | Apps:
+                <span *ngFor="let app of selectedProducto?.apps" class="badge bg-info me-1">{{ app.nombre }}</span>
+              </span>
+            </div>
+
+            <div class="mb-2">
+              <span *ngIf="selectedProducto?.observaciones">Observaciones: {{ selectedProducto?.observaciones }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="galeriaModal.length" class="mt-2 w-100">
+          <div class="galeria-modal-slider w-100">
+            <ng-container *ngFor="let img of galeriaModal">
+              <img
+                *ngIf="img.url !== getImagenPrincipal()"
+                [src]="img.url"
+                class="img-thumbnail galeria-modal-thumb"
+                [class.galeria-modal-thumb-active]="getImagenPrincipal() === img.url"
+                alt="Imagen de galería"
+                (click)="onSeleccionarImagen(img.url)"
+              >
+            </ng-container>
+          </div>
+        </div>
+
+        <div *ngIf="productosRelacionados.length" class="mt-2 w-100">
+          <div class="mb-2 fw-semibold text-dark d-inline-flex align-items-center gap-2">
+            <i class="bi bi-stars"></i>
+            <span>PRODUCTOS QUE TAMBIÉN PODRÍAN INTERESARTE</span>
+          </div>
+
+          <div class="relacionados-slider w-80">
+            <div
+              class="relacionado-slide"
+              *ngFor="let rel of productosRelacionados"
+              (click)="onSeleccionarRelacionado(rel, $event)"
+              title="Ver producto relacionado"
+            >
+              <img
+                [src]="rel?.imagen || 'https://via.placeholder.com/96x96?text=Prod'"
+                [alt]="rel?.nombre || 'Producto relacionado'"
+                class="relacionado-slide-img"
+              >
+
+              <div class="relacionado-slide-body">
+                <span class="relacionado-slide-name">{{ rel?.nombre }}</span>
+                <span class="relacionado-slide-price">
+                  ${{ getPrecioVisualProducto(rel) | number:'1.2-2' }}
+                  <span *ngIf="getPromoAplicada(rel) && rel.precio && getPrecioVisualProducto(rel) < rel.precio" class="text-muted text-decoration-line-through ms-1" style="font-size:0.85em;">
+                    ${{ rel.precio | number:'1.2-2' }}
+                  </span>
+                </span>
+                <div *ngIf="getPromoAplicada(rel) as promo" class="relacionado-slide-promo text-success mt-1" style="font-size: 0.90em;">
+                  <span *ngIf="promo.nombre"><span style="font-weight: normal; font-size: 0.82em;">{{ promo.nombre }}</span></span>
+                  <span *ngIf="promo.tipo === 'porcentaje'"> ({{ promo.valor }}% OFF)</span>
+                  <span *ngIf="promo.tipo === 'monto'"> (${{ promo.valor }} desc.)</span>
+                </div>
+                  
+                <div class="relacionado-slide-actions" (click)="$event.stopPropagation()">
+                  <div class="relacionado-cantidad-wrap">
+                    <span class="relacionado-cantidad-label">Cant.</span>
+                    <input
+                      type="number"
+                      min="1"
+                      class="form-control form-control-sm relacionado-cantidad-input"
+                      [ngModel]="getCantidadRelacionado(rel)"
+                      (ngModelChange)="setCantidadRelacionado(rel, $event)"
+                    />
+                  </div>
+                  <button
+                  type="button"
+                  class="btn btn-success btn-sm relacionado-slide-add"
+                  (click)="onAgregarRelacionado(rel, $event)"
+                  title="Agregar al carrito"
+                ><i class="bi bi-cart-plus"></i>
+                </button>
+                </div>
+
+                
+              </div>
+            </div>
+
+          <!-- Pie del modal fuera de productos relacionados -->
+        </div>
+      </div>
+
+      <div class="modal-footer d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" (click)="onCerrar()">
+          Cerrar
+        </button>
+        <button type="button" class="btn btn-success d-flex align-items-center gap-2 px-3" (click)="onAgregarPrincipal()">
+          <i class="bi bi-cart-plus fs-5"></i>
+          <span>Agregar al carrito</span>
+        </button>
+      </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div *ngIf="errorCarrito" class="alert alert-danger w-100 mb-2">{{ errorCarrito }}</div>
+      </div>
+    

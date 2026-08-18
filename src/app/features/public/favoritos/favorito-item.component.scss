@@ -1,0 +1,12 @@
+.producto-card {
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+.producto-card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.08);
+}
+.card-img-top.producto-oferta-img {
+  object-fit: cover;
+  height: 180px;
+}

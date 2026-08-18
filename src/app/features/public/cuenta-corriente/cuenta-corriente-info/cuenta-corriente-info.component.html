@@ -1,0 +1,14 @@
+<p>cuenta-corriente-info works!</p>
+
+<form [formGroup]="form" (ngSubmit)="submit()" class="p-4 border rounded bg-light">
+  <div class="mb-3">
+    <label class="form-label">Nro. Cuenta Corriente</label>
+    <input class="form-control" formControlName="nroCuentaCorriente" required />
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Saldo</label>
+    <input type="number" class="form-control" formControlName="saldoCuentaCorriente" required />
+  </div>
+  <button class="btn btn-primary" type="submit" [disabled]="form.invalid || loading">Guardar</button>
+  <div *ngIf="error" class="alert alert-danger mt-2">{{ error | escapeCurlyBraces }}</div>
+</form>

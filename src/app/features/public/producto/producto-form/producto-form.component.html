@@ -1,0 +1,32 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="p-4 border rounded bg-light">
+  <div class="mb-3">
+    <label class="form-label">Nombre</label>
+    <input class="form-control" formControlName="nombre" required />
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Descripción</label>
+    <textarea class="form-control" formControlName="descripcion"></textarea>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Precio</label>
+    <input type="number" class="form-control" formControlName="precio" required />
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Stock</label>
+    <input type="number" class="form-control" formControlName="stock" required />
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Empresa</label>
+    <input type="number" class="form-control" formControlName="empresaId" required />
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Rubro</label>
+    <input type="number" class="form-control" formControlName="rubroId" required />
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Subrubro</label>
+    <input type="number" class="form-control" formControlName="subrubroId" />
+  </div>
+  <button class="btn btn-primary" type="submit" [disabled]="form.invalid || loading">Guardar</button>
+  <div *ngIf="error" class="alert alert-danger mt-2">{{ error }}</div>
+</form>

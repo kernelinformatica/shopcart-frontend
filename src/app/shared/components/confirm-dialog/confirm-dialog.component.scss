@@ -1,0 +1,22 @@
+/* Animación de entrada desde arriba */
+@keyframes slideDown {
+  from {
+    transform: translateY(-100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Aplicar la animación al modal */
+.modal.fade .modal-dialog {
+  transform: translateY(-100px);
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.modal.show .modal-dialog {
+  transform: translateY(0);
+  animation: slideDown 0.3s ease-out;
+}

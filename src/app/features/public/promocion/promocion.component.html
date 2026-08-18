@@ -1,0 +1,118 @@
+<section class="promo-page container py-4">
+	<div class="promo-intro card border-0 shadow-sm mb-3" *ngIf="!loading && !error && promo">
+		<div class="card-body d-flex align-items-start justify-content-between flex-wrap gap-3">
+			<div>
+				<h2 class="mb-1">{{ promo?.nombre || promo?.denominacion || 'Oferta especial' }}</h2>
+				<p class="text-muted mb-2" *ngIf="promo?.descripcion || promo?.detalle || promo?.descripcion_larga">
+					{{ promo?.descripcion || promo?.detalle || promo?.descripcion_larga }}
+				</p>
+				<div class="promo-vigencia" *ngIf="promo?.fechaDesde || promo?.fechaHasta || promo?.fechainicio || promo?.fechafin">
+					<span class="badge bg-light text-dark border d-inline-flex align-items-center gap-2">
+						<i class="bi bi-calendar3"></i>
+						<span>
+							Vigencia:
+							<span *ngIf="getFechaInicioPromo()">Desde el {{ getFechaInicioPromo() | date:'dd/MM/yyyy' }}</span>
+							<span *ngIf="getFechaFinPromo()"> hasta el {{ getFechaFinPromo() | date:'dd/MM/yyyy' }}</span>
+						</span>
+					</span>
+				</div>
+			</div>
+			<button class="btn btn-outline-secondary" (click)="volver()">Volver</button>
+		</div>
+	</div>
+
+	<div *ngIf="loading" class="text-center py-5 text-muted">
+		Cargando promoción...
+	</div>
+
+	<div *ngIf="!loading && error" class="alert alert-warning mb-0">
+		{{ error }}
+	</div>
+
+	<ng-container *ngIf="!loading && !error && promo">
+		<div class="promo-header card border-0 shadow-sm mb-4 overflow-hidden">
+			<div class="row g-0 align-items-stretch">
+				<div class="col-lg-4 col-md-5" *ngIf="tieneImagenPromocion()">
+					<ng-container *ngIf="getImagenesPromocion().length > 1; else promoCoverSingle">
+						<div id="promoSlideCarousel" class="carousel slide promo-slide-carousel h-100" data-bs-ride="carousel" data-bs-interval="5000" data-bs-pause="hover">
+							<div class="carousel-inner h-100">
+								<div
+									class="carousel-item h-100"
+									*ngFor="let imagen of getImagenesPromocion(); let i = index"
+									[ngClass]="{ active: i === 0 }"
+								>
+									<img
+										class="promo-cover"
+										[src]="imagen.url"
+										[alt]="imagen.alias || imagen.nombreOriginal || promo?.nombre || promo?.denominacion || 'Promoción'"
+										(error)="onPromoImagenError($event)"
+									/>
+								</div>
+							</div>
+							<button *ngIf="getImagenesPromocion().length > 1" class="carousel-control-prev" type="button" data-bs-target="#promoSlideCarousel" data-bs-slide="prev">
+								<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+								<span class="visually-hidden">Anterior</span>
+							</button>
+							<button *ngIf="getImagenesPromocion().length > 1" class="carousel-control-next" type="button" data-bs-target="#promoSlideCarousel" data-bs-slide="next">
+								<span class="carousel-control-next-icon" aria-hidden="true"></span>
+								<span class="visually-hidden">Siguiente</span>
+							</button>
+						</div>
+					</ng-container>
+					<ng-template #promoCoverSingle>
+						<img
+							class="promo-cover"
+							[src]="getImagenPromocion()"
+							[alt]="promo?.nombre || promo?.denominacion || 'Promoción'"
+							(error)="onPromoImagenError($event)"
+						/>
+					</ng-template>
+				</div>
+				<div [ngClass]="tieneImagenPromocion() ? 'col-lg-8 col-md-7' : 'col-12'">
+					<div class="card-body h-100 d-flex flex-column justify-content-center">
+						<p class="text-success fw-semibold mb-0 d-inline-flex align-items-center gap-2" *ngIf="getMensajeVencimiento()">
+							<i class="bi bi-hourglass-split"></i>
+							<span>{{ getMensajeVencimiento() }}</span>
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<h4 class="mb-3">Productos incluidos</h4>
+
+		<div *ngIf="!productosPromo.length" class="alert alert-info mb-0">
+			Esta oferta no tiene productos asociados por el momento.
+		</div>
+
+				<div *ngIf="productosPromo.length" class="row g-4">
+					<div class="col-12 col-sm-6 col-lg-3" *ngFor="let producto of productosPromo">
+						<app-producto-item
+							[producto]="producto"
+							[favoritos]="favoritos"
+							[ratings]="ratings"
+							[ratingGlobal]="ratingsGlobal[producto.id]"
+							(cardClick)="onCardClick($event, producto)"
+							(toggleFavorito)="toggleFavorito($event.producto, $event.event)"
+							(agregarCarrito)="agregarDesdeCard($event, $event)"
+							(setRating)="setRating(producto, $event.rating, $event.event)"
+						></app-producto-item>
+					</div>
+				</div>
+	</ng-container>
+</section>
+
+<app-producto-detalle-modal
+	[selectedProducto]="selectedProducto"
+	[mainImageUrl]="getImagenPrincipalProducto(selectedProducto)"
+	[galeriaModal]="getGaleriaModal(selectedProducto)"
+	[productosRelacionados]="productosRelacionadosModal"
+	[cantidadAgregar]="cantidadAgregar"
+	[errorCarrito]="''"
+	(cantidadAgregarChange)="cantidadAgregar = $event"
+	(seleccionarImagen)="seleccionarImagenModal($event)"
+	(seleccionarRelacionado)="seleccionarProductoRelacionado($event?.value ?? $event)"
+	(agregarRelacionado)="agregarRelacionadoDesdeModal($event)"
+	(agregarPrincipal)="agregarAlCarrito()"
+	(cerrar)="cerrarDetalleProducto()"
+></app-producto-detalle-modal>

@@ -1,0 +1,59 @@
+<div class="usuario-form-shell">
+  <div class="usuario-form-card shadow-sm">
+    <div class="usuario-form-header mb-3">
+      <h3 class="mb-1">Registro de usuario</h3>
+      <p class="text-muted mb-0">Completá los datos para crear la cuenta.</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="usuario-form-grid">
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <label class="form-label">Nombre</label>
+          <input class="form-control" formControlName="nombre" required />
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" formControlName="email" required />
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label">Contraseña</label>
+          <input type="password" class="form-control" formControlName="password" required />
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label">Rol</label>
+          <select class="form-select" formControlName="rol">
+            <option value="usuario">Usuario</option>
+            <option value="admin">Admin</option>
+            <option value="repartidor">Repartidor</option>
+          </select>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label">Empresa</label>
+          <input type="number" class="form-control" formControlName="empresaId" />
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label">Nro. Cuenta Corriente</label>
+          <input class="form-control" formControlName="nroCuentaCorriente" />
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label">Saldo Cuenta Corriente</label>
+          <input type="number" class="form-control" formControlName="saldoCuentaCorriente" />
+        </div>
+
+        <div class="col-12 d-flex justify-content-end gap-2 pt-1">
+          <button class="btn btn-primary px-4" type="submit" [disabled]="form.invalid || loading">
+            {{ loading ? 'Guardando...' : 'Guardar' }}
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="error" class="alert alert-danger mt-3 mb-0">{{ error }}</div>
+    </form>
+  </div>
+</div>

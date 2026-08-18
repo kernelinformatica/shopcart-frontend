@@ -1,0 +1,227 @@
+.listas-precios-page .card { border-radius: 0.6rem; }
+.modal-backdrop { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; background: rgba(0,0,0,0.35); z-index: 2000; }
+.modal-dialog { width: 640px; max-width: calc(100% - 2rem); }
+
+.listas-precios-page .list-group .list-group-item .suggestion-thumb img {
+	width: 48px;
+	height: 48px;
+	object-fit: cover;
+	border-radius: 4px;
+}
+
+/* Image modal styles (global within this file) */
+.modal-dialog.image-modal { width: auto; max-width: 90vw; }
+.modal-image { max-width: 88vw; max-height: 82vh; object-fit: contain; }
+
+/* Ensure modal dialog receives pointer events when backdrop is present */
+.modal-backdrop .modal-dialog { pointer-events: auto; z-index: 2100; }
+
+/* Thumbnail used in precios table */
+.listas-precios-page .precio-producto-thumb {
+	width: 48px;
+	height: 48px;
+	object-fit: cover;
+	border-radius: 4px;
+	flex-shrink: 0;
+}
+.producto-edit-thumb {
+	width: 120px;
+	height: 120px;
+	object-fit: cover;
+	border-radius: 6px;
+	cursor: pointer;
+}
+.producto-placeholder {
+	width: 120px;
+	height: 120px;
+	background: #f3f4f6; /* light gray */
+	border: 1px dashed #e5e7eb;
+	color: #9ca3af;
+	border-radius: 6px;
+	font-size: 1.5rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0 auto;
+}
+/* Ensure preview image uses same fixed size and is centered */
+.preview-product-image {
+	width: 120px;
+	height: 120px;
+	object-fit: cover;
+	border-radius: 6px;
+	cursor: pointer;
+	display: block;
+	margin: 0 auto;
+}
+.listas-precios-page .list-group .list-group-item.active {
+	background-color: rgba(0,123,255,0.12);
+	border-left: 3px solid #0d6efd;
+}
+.listas-precios-page .list-group .list-group-item.list-group-item-action:hover { cursor: pointer; }
+.listas-precios-page .list-group .list-group-item { display:flex; align-items:center; }
+.listas-precios-page .list-group .list-group-item.inactive { opacity: 0.6; }
+.listas-precios-page .list-group .list-group-item .lista-count { width:72px; display:flex; align-items:center; justify-content:center; }
+.listas-precios-page .list-group .list-group-item .lista-left { max-width: calc(100% - 220px); }
+.listas-precios-page .list-group .list-group-item .btn-actions .btn { border: none; background: transparent; }
+.listas-precios-page .list-group .list-group-item .badge {
+	font-size: 0.7rem;
+	padding: 0.25rem 0.45rem;
+}
+.listas-precios-page .modal-backdrop .list-group { box-shadow: 0 6px 18px rgba(0,0,0,0.12); }
+.listas-precios-page .card-header {
+	background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+	border-bottom: 1px solid #e2e8f0;
+	border-radius: 0.75rem 0.75rem 0 0;
+}
+.listas-precios-page .card { border-radius: 0.5rem; }
+.listas-precios-page .card .card-body { padding: 1rem; }
+.listas-precios-page .card .card-header h5 { margin: 0; font-size: 1.0rem; }
+.listas-precios-page .list-group-item { padding: 0.75rem 1.0rem; }
+
+/* Hero panel (copy from usuarios styles for exact look) */
+.listas-precios-page .hero-panel {
+	
+	padding: 2.0rem;
+	border-radius: 1.25rem;
+	
+	background: var(--gradient-global, linear-gradient(135deg, #1e293b 0%, #334155 100%));
+	color: #fff;
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+	align-items: center;
+	flex-wrap: wrap;
+	box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.18);
+
+	h2 { color: #fff; }
+	.eyebrow {
+		text-transform: uppercase;
+		letter-spacing: 0.14em;
+		font-size: 0.72rem;
+		font-weight: 700;
+		color: rgba(255, 255, 255, 0.7);
+	}
+	p.text-muted { color: rgba(255,255,255,0.65) !important; }
+}
+
+.listas-precios-page .hero-actions { display:flex; gap:0.75rem; }
+
+/* Toggle button used for folding panels */
+.listas-precios-page .filtros-toggle-btn {
+	width: 2.5rem;
+	height: 2.5rem;
+	border: 1px solid #cbd5e1;
+	border-radius: 999px;
+	background: #fff;
+	color: #334155;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: background-color 0.18s, transform 0.18s;
+}
+
+/* Match typography and controls to usuarios module */
+.listas-precios-page {
+	font-family: inherit;
+
+	.form-label { font-weight: 600; color: #334155; }
+	.form-control, .form-select {
+		font-size: 0.82rem;
+		border-radius: 0.75rem;
+		border-color: #cbd5e1;
+	}
+
+	.card-header h5 { font-size: 1rem; color: #111827; }
+
+	.table thead th {
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: #64748b;
+		font-weight: 700;
+		border-bottom: 2px solid #e2e8f0;
+		padding: 0.85rem 1rem;
+		background: #f8fafc;
+	}
+
+	/* Right-align action icons column and prevent wrapping */
+	.table tbody td:last-child {
+		width: 1%;
+		white-space: nowrap;
+		text-align: right;
+		vertical-align: middle;
+	}
+
+	.table tbody td:last-child .btn-group {
+		display: inline-flex;
+		gap: 0.35rem;
+		justify-content: flex-end;
+		margin-left: auto;
+	}
+
+	.table tbody td {
+		padding: 0.85rem 1rem;
+		font-size: 0.85rem;
+		vertical-align: middle;
+		border-bottom: 1px solid #f1f5f9;
+	}
+
+	.table tbody tr:hover { background: #f8fafc; }
+
+	.table tbody tr.producto-inactivo { opacity: 0.6; }
+	.table tbody tr.producto-baja { opacity: 0.45; }
+
+	.icon-action-btn {
+		width: 2.5rem;
+		height: 2.5rem;
+		border-radius: 999px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid rgba(255, 255, 255, 0.4);
+		background: rgba(255, 255, 255, 0.1);
+		color: #1d1d1d;
+		text-decoration: none;
+		box-shadow: 0 0.5rem 1rem rgba(15, 23, 42, 0.12);
+		transition: transform 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+	}
+
+	/* Icon-only buttons used in the listas-precios list */
+	.btn-icon-only {
+		border: none;
+		background: transparent;
+		padding: 0;
+		color: #334155;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 6px;
+		transition: background-color 0.12s, color 0.12s;
+	}
+
+	.btn-icon-only:focus { box-shadow: none; outline: none; }
+
+	.btn-icon-only:hover { transform: translateY(-1px); background: rgba(255,255,255,0.18); box-shadow: 0 0.75rem 1.2rem rgba(15, 23, 42, 0.18); color: #0b5ed7; }
+
+	.btn-icon-only.text-danger:hover { transform: translateY(-1px); background: rgba(254, 242, 242, 0.8); box-shadow: 0 0.75rem 1.2rem rgba(15, 23, 42, 0.18); color: #c82333; }
+
+	.btn-icon-only .bi { font-size: 1.05rem; }
+
+	/* Align action buttons in the list-group to the right and match producto-lista sizing */
+	.listas-precios-page .list-group .btn-group {
+		min-width: 56px;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		margin-left: auto; /* push to the extreme right */
+	}
+
+	.listas-precios-page .list-group .btn-icon-only .bi {
+		font-size: 1.25rem;
+	}
+
+	.eyebrow { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.72rem; font-weight: 700; color: rgba(255,255,255,0.7); }
+}
+

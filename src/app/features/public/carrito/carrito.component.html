@@ -1,0 +1,485 @@
+<section class="container py-4 carrito-page">
+	<!-- Modal flotante de pago -->
+	<div *ngIf="modalPagoVisible" class="modal-backdrop show" style="z-index: 1050;"></div>
+	<div *ngIf="modalPagoVisible" class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.25);z-index:1060;">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content shadow-lg rounded-4">
+				<div class="modal-header border-0">
+					<h5 class="modal-title">Pago seguro</h5>
+					<button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrarModalPago()"></button>
+				</div>
+				<div class="modal-body">
+					<div *ngIf="modalPagoEstado === 'esperando'">
+						<div class="d-flex flex-column align-items-center justify-content-center py-4">
+							<div class="spinner-border text-primary mb-3" style="width:2.5rem;height:2.5rem;"></div>
+							<div class="fw-semibold">Preparando pasarela de pago...</div>
+							<div class="text-muted small mt-2">No cierres esta ventana</div>
+						</div>
+					</div>
+					<div *ngIf="modalPagoEstado === 'widget'">
+						<!-- Widget de Mercado Pago o pasarela -->
+						<div id="widget-mercadopago" style="min-height:350px;"></div>
+					</div>
+					<div *ngIf="modalPagoEstado === 'resultado'">
+						<div class="d-flex flex-column align-items-center justify-content-center py-4">
+							<div [ngClass]="{'text-success': modalPagoExito, 'text-danger': !modalPagoExito}" style="font-size:2.5rem;">
+								<i class="bi" [ngClass]="modalPagoExito ? 'bi-check-circle-fill' : 'bi-x-circle-fill'"></i>
+							</div>
+							<div class="fw-semibold mt-2" [ngClass]="{'text-success': modalPagoExito, 'text-danger': !modalPagoExito}">
+								{{ modalPagoMensaje }}
+							</div>
+							<div class="text-muted small mt-2" *ngIf="modalPagoDetalle">{{ modalPagoDetalle }}</div>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer border-0 justify-content-center" *ngIf="modalPagoEstado === 'resultado'">
+					<button type="button" class="btn btn-outline-primary" (click)="cerrarModalPago()">Cerrar</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+		<h2 class="mb-0 fw-bold">Mi carrito</h2>
+		<button class="btn btn-outline-danger" type="button" (click)="vaciarCarrito()">
+			<i class="bi bi-trash3 me-1"></i> Vaciar carrito
+		</button>
+	</div>
+
+	<ng-container *ngIf="items$ | async as items">
+		<div *ngIf="!items.length" class="alert alert-info mb-0">
+			El carrito está vacío.
+		</div>
+
+		<div *ngIf="items.length" class="card shadow-sm">
+			<div class="table-responsive">
+				<table class="table align-middle mb-0">
+					<thead>
+						<tr>
+							<th>Producto</th>
+							<th class="text-end">Precio</th>
+							<th class="text-center">Cantidad</th>
+							<th class="text-end">Subtotal</th>
+							<th class="text-end">Acciones</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr *ngFor="let item of items">
+							<td>
+								<div class="fw-semibold">{{ item.producto.nombre || 'Producto' }} </div>
+								<div class="small text-muted" *ngIf="item.producto.descripcion">{{ item.producto.descripcion }}</div>
+							</td>
+							<td class="text-end">
+								<ng-container *ngIf="item.producto.infoCuotas; else precioPromoNormal">
+									<span class="fw-semibold">
+										${{ getPrecioUnitario(item) | number:'1.2-2' }}
+									</span>
+									<div class="small text-primary mt-1">
+										{{ item.producto.infoCuotas.cuotas }} cuotas sin interés
+										<span *ngIf="item.producto.infoCuotas.banco">con tarjeta {{ item.producto.infoCuotas.banco }}</span>
+										<span *ngIf="item.producto.infoCuotas.descripcion">({{ item.producto.infoCuotas.descripcion }})</span>
+									</div>
+								</ng-container>
+								<ng-template #precioPromoNormal>
+									<span class="fw-semibold">
+										${{ getPrecioUnitario(item) | number:'1.2-2' }}
+									</span>
+									<span
+										*ngIf="getPrecioOriginal(item) as precioOriginal"
+										class="text-muted text-decoration-line-through ms-1 small"
+									>
+										${{ precioOriginal | number:'1.2-2' }}
+									</span>
+									<ng-container *ngIf="getAhorroUnitario(item) as ahorroUnitario">
+										<span class="text-success small ms-2">
+											Ahorras ${{ ahorroUnitario | number:'1.2-2' }}
+										</span>
+									</ng-container>
+								</ng-template>
+							</td>
+							<td class="text-center">
+								<div class="d-inline-flex align-items-center gap-2">
+									<button class="btn btn-sm btn-outline-secondary" type="button" (click)="decrementarCantidad(item)">-</button>
+									<span class="fw-semibold min-w-cantidad">{{ item.cantidad }}</span>
+									<button class="btn btn-sm btn-outline-secondary" type="button" (click)="incrementarCantidad(item)">+</button>
+								</div>
+							</td>
+							<td class="text-end fw-semibold">
+								<!-- Precio final con descuentos (sin cuotas) -->
+								<span class="fw-semibold">
+									 ${{ (getPrecioFinalConDescuentos(item) * item.cantidad) | number:'1.2-2' }}
+								</span>
+								<span
+									*ngIf="getPrecioOriginal(item) as precioOriginal"
+									class="text-muted text-decoration-line-through ms-1 small"
+								>
+									${{ (precioOriginal * item.cantidad) | number:'1.2-2' }}
+								</span>
+								<ng-container *ngIf="getAhorroSubtotal(item) as ahorroSubtotal">
+									<div class="text-success small mt-1">
+										Ahorras ${{ ahorroSubtotal | number:'1.2-2' }} en este producto
+									</div>
+								</ng-container>
+								<!-- Badges de otras promos (no cuotas) -->
+								<div *ngIf="getOtrasPromos(item.producto).length > 0" class="mt-1">
+									<ng-container *ngFor="let promo of getOtrasPromos(item.producto)">
+										<span class="badge bg-warning text-dark me-1" [title]="getPromoTooltip(promo)">
+											{{ promo.nombre || 'Promoción' }} <span *ngIf="promo.tipo || promo.promocionTipo?.alias">({{ promo.tipo || promo.promocionTipo?.alias }})</span>
+										</span>
+									</ng-container>
+								</div>
+								<!-- Badges de cuotas -->
+								<div *ngIf="getCuotasPromos(item.producto).length > 0" class="mt-1">
+									<ng-container *ngFor="let promo of getCuotasPromos(item.producto)">
+										<span class="badge bg-primary text-white me-1" [title]="getPromoTooltip(promo)">
+											{{ promo.cuotas }} cuotas de ${{ getCuotaValor(item, promo) | number:'1.2-2' }} sin interés
+											<span *ngIf="promo.banco">con {{ promo.banco }}</span>
+										</span>
+									</ng-container>
+								</div>
+							</td>
+							<td class="text-end">
+								<button class="btn btn-sm btn-outline-danger" type="button" (click)="eliminarProducto(item)">
+									<i class="bi bi-x-circle me-1"></i> Eliminar
+								</button>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="card-footer d-flex flex-column align-items-end gap-2">
+				<div class="d-flex align-items-center gap-2">
+					<span class="text-muted">Total:</span>
+					<span class="fs-5 fw-bold text-primary">${{ ((total$ | async) || 0) | number:'1.2-2' }}</span>
+				</div>
+				<div *ngIf="items && items.length">
+					<ng-container *ngIf="getAhorroTotal(items) > 0">
+						<span class="text-success small">Ahorro total: ${{ getAhorroTotal(items) | number:'1.2-2' }}</span>
+					</ng-container>
+				</div>
+			</div>
+		</div>
+
+		<div class="row g-4 mt-3" *ngIf="items.length">
+			<div class="col-lg-8">
+				<section class="card shadow-sm mb-3">
+					<div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+						<h5 class="mb-0">Dirección de entrega</h5>
+						<button class="btn btn-sm btn-outline-primary" type="button" (click)="toggleFormularioDireccion()">
+							{{ mostrarFormularioDireccion ? 'Cerrar formulario' : 'Agregar dirección' }}
+						</button>
+					</div>
+					<div class="card-body">
+						<div *ngIf="direccionError" class="alert alert-danger">{{ direccionError }}</div>
+						<div *ngIf="loadingDirecciones" class="text-muted">Cargando direcciones...</div>
+						<div *ngIf="!loadingDirecciones && direcciones.length" class="list-group direccion-list">
+							<label class="list-group-item d-flex align-items-start gap-3" *ngFor="let direccion of direcciones">
+								<input class="form-check-input mt-1" type="radio" name="direccionSeleccionada"
+									[value]="direccion.id"
+									[checked]="selectedDireccionId === direccion.id"
+									(change)="seleccionarDireccion(direccion)" />
+								<div class="flex-grow-1">
+									<div class="d-flex align-items-center gap-2">
+										<span class="fw-semibold">{{ direccion.alias || 'Sin alias' }}</span>
+										<span *ngIf="direccion.esPrincipal" class="badge bg-primary-subtle text-primary">Principal</span>
+									</div>
+									<div class="text-muted small">
+										{{ direccion.calle }} {{ direccion.numero || '' }}
+										<span *ngIf="direccion.piso">, Piso {{ direccion.piso }}</span>
+										<span *ngIf="direccion.departamento"> Dpto {{ direccion.departamento }}</span>
+										<span *ngIf="direccion.localidad?.nombre"> - {{ direccion.localidad?.nombre }}</span>
+									</div>
+									<div class="small" *ngIf="direccion.receptorNombre">Contacto: {{ direccion.receptorNombre }} {{ direccion.receptorTelefono || '' }}</div>
+								</div>
+								<div class="btn-group btn-group-sm">
+									<button class="btn btn-outline-secondary" type="button"
+										(click)="$event.stopPropagation(); establecerPrincipal(direccion)"
+										[disabled]="direccion.esPrincipal">
+										Marcar principal
+									</button>
+									<button class="btn btn-outline-danger" type="button"
+										(click)="$event.stopPropagation(); eliminarDireccion(direccion)">
+										Eliminar
+									</button>
+								</div>
+							</label>
+						</div>
+						<div *ngIf="!loadingDirecciones && !direcciones.length" class="alert alert-info mb-0">
+							Aún no tienes direcciones guardadas. Crea una nueva para continuar.
+						</div>
+
+						<form *ngIf="mostrarFormularioDireccion" class="mt-3 border rounded p-3 direccion-form"
+							[formGroup]="direccionForm" (ngSubmit)="guardarDireccion()">
+							<div class="row g-3">
+								<div class="col-md-6">
+									<label class="form-label">Alias</label>
+									<input type="text" class="form-control" formControlName="alias" placeholder="Casa, oficina, etc." />
+								</div>
+								<div class="col-md-6">
+									<label class="form-label">Calle *</label>
+									<input type="text" class="form-control" formControlName="calle" required />
+									<div class="invalid-feedback d-block" *ngIf="direccionForm.get('calle')?.touched && direccionForm.get('calle')?.invalid">
+										Campo obligatorio
+									</div>
+								</div>
+								<div class="col-md-3">
+									<label class="form-label">Número</label>
+									<input type="text" class="form-control" formControlName="numero" />
+								</div>
+								<div class="col-md-3">
+									<label class="form-label">Piso</label>
+									<input type="text" class="form-control" formControlName="piso" />
+								</div>
+								<div class="col-md-3">
+									<label class="form-label">Departamento</label>
+									<input type="text" class="form-control" formControlName="departamento" />
+								</div>
+								<div class="col-md-3">
+									<label class="form-label">Código Postal</label>
+									<input type="text" class="form-control" formControlName="codigoPostal" />
+								</div>
+								<div class="col-md-6">
+									<label class="form-label">Nombre del receptor</label>
+									<input type="text" class="form-control" formControlName="receptorNombre" placeholder="Nombre del receptor" />
+								</div>
+								<div class="col-md-6">
+									<label class="form-label">Teléfono del receptor</label>
+									<input type="text" class="form-control" formControlName="receptorTelefono" />
+								</div>
+								<div class="col-md-6">
+									<label class="form-label">Entre calles</label>
+									<input type="text" class="form-control" formControlName="entreCalles" />
+								</div>
+								<div class="col-md-6">
+									<label class="form-label">Referencia</label>
+									<input type="text" class="form-control" formControlName="referencia" />
+								</div>
+								<div class="col-md-6">
+									<label class="form-label">Localidad ID *</label>
+									<input type="number" class="form-control" formControlName="localidadId" required />
+									<div class="invalid-feedback d-block" *ngIf="direccionForm.get('localidadId')?.touched && direccionForm.get('localidadId')?.invalid">
+										Campo obligatorio o inválido
+									</div>
+								</div>
+								<div class="col-md-6">
+									<label class="form-label">Provincia ID</label>
+									<input type="number" class="form-control" formControlName="provinciaId" />
+								</div>
+								<div class="col-md-4">
+									<label class="form-label">Latitud</label>
+									<input type="number" step="0.000001" class="form-control" formControlName="latitud" />
+								</div>
+								<div class="col-md-4">
+									<label class="form-label">Longitud</label>
+									<input type="number" step="0.000001" class="form-control" formControlName="longitud" />
+								</div>
+								<div class="col-md-4">
+									<label class="form-label">Precisión</label>
+									<select class="form-select" formControlName="precisionGeo">
+										<option *ngFor="let opcion of precisionGeoOptions" [value]="opcion">
+											{{ opcion }}
+										</option>
+									</select>
+								</div>
+								<div class="col-md-4 d-flex align-items-center gap-2">
+									<input type="checkbox" class="form-check-input" id="direccionPrincipal" formControlName="esPrincipal" />
+									<label class="form-check-label" for="direccionPrincipal">Marcar como principal</label>
+								</div>
+							</div>
+							<div class="d-flex justify-content-end gap-2 mt-3">
+								<button class="btn btn-outline-secondary" type="button" (click)="toggleFormularioDireccion()">Cancelar</button>
+								<button class="btn btn-primary" type="submit">Guardar dirección</button>
+							</div>
+						</form>
+					</div>
+				</section>
+
+				<section class="card shadow-sm">
+					<div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+						<h5 class="mb-0">Método de entrega</h5>
+						<select
+							#entregaTipoSelect
+							class="form-select form-select-sm w-auto"
+							(change)="onFiltroTipoChange(entregaTipoSelect.value)"
+							[disabled]="!entregaTipos.length"
+						>
+							<option value="todos">Todos los tipos</option>
+							<option *ngFor="let tipo of entregaTipos" [value]="tipo.id">{{ tipo.nombre }}</option>
+						</select>
+					</div>
+					<div class="card-body">
+						<div *ngIf="!direccionSeleccionada" class="alert alert-info mb-0">
+							Selecciona o crea una dirección para ver los métodos disponibles.
+						</div>
+						<ng-container *ngIf="direccionSeleccionada">
+							<div *ngIf="entregaError" class="alert alert-danger">
+								<div>{{ entregaError }}</div>
+								<button
+									*ngIf="mostrarCtaOrigenEnvio"
+									class="btn btn-sm btn-outline-light mt-2"
+									type="button"
+									(click)="irAConfigOrigenEnvio()"
+								>
+									Configurar origen de envío
+								</button>
+							</div>
+							<div *ngIf="entregaLoading" class="text-muted">Buscando opciones para tu zona...</div>
+							<div *ngIf="!entregaLoading && entregaOpciones.length" class="list-group entrega-opciones">
+								<label class="list-group-item d-flex gap-3 align-items-start" *ngFor="let opcion of entregaOpciones">
+									<input class="form-check-input mt-1" type="radio" name="entregaOpcion"
+										[value]="opcion.id"
+										[checked]="selectedEntregaOpcionId === opcion.id"
+										(change)="seleccionarEntregaOpcion(opcion)" />
+									<div class="flex-grow-1">
+										<div class="d-flex align-items-center gap-2">
+											<span class="fw-semibold">{{ opcion.nombre }}</span>
+											<span class="badge bg-light text-secondary" *ngIf="opcion.entregaTipo?.nombre">{{ opcion.entregaTipo?.nombre }}</span>
+										</div>
+										<div class="text-muted small">{{ opcion.descripcion || 'Sin descripción disponible' }}</div>
+										<div class="small text-muted" *ngIf="opcion.tiempoMinHoras || opcion.tiempoMaxHoras">
+											ETA: {{ opcion.tiempoMinHoras || '?' }} - {{ opcion.tiempoMaxHoras || '?' }} hs
+										</div>
+									</div>
+								</label>
+							</div>
+							<div *ngIf="!entregaLoading && !entregaOpciones.length" class="alert alert-warning">
+								No encontramos métodos disponibles para esta localidad.
+							</div>
+							<div *ngIf="cotizacion" class="alert alert-success mt-3">
+								<div class="fw-semibold" *ngIf="cotizacionCostoEstimado > 0">Costo estimado: ${{ cotizacionCostoEstimado | number:'1.2-2' }}<span *ngIf="cotizacionMoneda"> {{ cotizacionMoneda }}</span></div>
+								<div class="fw-semibold" *ngIf="cotizacionCostoEstimado <= 0">Envío sin costo (retiro en sucursal)</div>
+								<div *ngIf="cotizacionDistanciaKm !== null" class="small text-muted">Distancia: {{ cotizacionDistanciaKm | number:'1.1-1' }} km</div>
+								<div *ngIf="cotizacion.etaMinutos !== undefined && cotizacion.etaMinutos !== null" class="small text-muted">ETA (mín): {{ cotizacion.etaMinutos }} min</div>
+								<div *ngIf="cotizacion.etaMaxima !== undefined && cotizacion.etaMaxima !== null" class="small text-muted">ETA (máx): {{ cotizacion.etaMaxima }}</div>
+								<div *ngIf="cotizacion.tiempoEstimadoHoras" class="small text-muted">ETA aprox: {{ cotizacion.tiempoEstimadoHoras }} hs</div>
+								<div class="small text-muted" *ngIf="cotizacion.metadata?.pricing as pricing">
+									<div *ngIf="pricing.costoBase !== undefined && pricing.costoBase !== null">Costo base: {{ pricing.costoBase | number:'1.2-2' }}</div>
+									<div *ngIf="pricing.costoPorPedido !== undefined && pricing.costoPorPedido !== null">Cargo por pedido: {{ pricing.costoPorPedido | number:'1.2-2' }}</div>
+									<div *ngIf="pricing.costoPorKm !== undefined && pricing.costoPorKm !== null">Costo por km: {{ pricing.costoPorKm | number:'1.2-2' }}</div>
+									<div *ngIf="pricing.costoAplicado !== undefined && pricing.costoAplicado !== null">Costo aplicado: {{ pricing.costoAplicado | number:'1.2-2' }}</div>
+								</div>
+							</div>
+							<button class="btn btn-primary mt-3" type="button" (click)="confirmarEntrega()" [disabled]="!cotizacion">
+								Confirmar método de entrega
+							</button>
+						</ng-container>
+					</div>
+				</section>
+			</div>
+			<div class="col-lg-4">
+				<section class="card shadow-sm sticky-card">
+					<div class="card-header">
+						<h5 class="mb-0">Resumen del pedido</h5>
+					</div>
+					<div class="card-body">
+						<ng-container *ngIf="total$ | async as total">
+							<div class="d-flex justify-content-between mb-2 text-muted">
+								<span>Productos</span>
+								<span>${{ total | number:'1.2-2' }}</span>
+							</div>
+							<!-- Impuestos agrupados destacados -->
+							<ng-container *ngIf="getImpuestosAgrupados(items).length > 0">
+								<div class="mb-1 mt-2">
+									<span class="fw-semibold text-dark small"><i class="bi bi-receipt-cutoff me-1"></i>Impuestos</span>
+								</div>
+								<div *ngFor="let imp of getImpuestosAgrupados(items)" class="d-flex justify-content-between mb-1 align-items-center">
+									<span class="text-secondary-emphasis"><i class="bi bi-dot"></i>{{ imp.nombre }}</span>
+									<span class="fw-semibold text-danger">${{ imp.valor | number:'1.2-2' }}</span>
+								</div>
+							</ng-container>
+							<div class="d-flex justify-content-between mb-2 text-muted mt-2">
+								<span>Envío estimado</span>
+								<span *ngIf="cotizacionCostoEstimado > 0">${{ cotizacionCostoEstimado | number:'1.2-2' }}</span>
+								<span *ngIf="cotizacionCostoEstimado <= 0">Sin costo (retiro en sucursal)</span>
+							</div>
+							<div class="mb-3">
+								<h6 class="text-muted text-uppercase small mb-2">Medio de pago</h6>
+								<div *ngIf="formasPagoLoading" class="text-muted small">Cargando formas de pago...</div>
+								<div *ngIf="!formasPagoLoading && formasPagoError" class="alert alert-warning mb-2">{{ formasPagoError }}</div>
+								<ng-container *ngIf="!formasPagoLoading && !formasPagoError">
+									<ng-container *ngIf="formasPagoDisponibles.length; else sinFormasPago">
+										<div class="list-group">
+											<label class="list-group-item d-flex gap-3 align-items-start" *ngFor="let forma of formasPagoDisponibles">
+												<input class="form-check-input mt-1" type="radio" [value]="forma.codigo" [formControl]="metodoPagoControl" />
+												<div class="flex-grow-1">
+													<div class="d-flex justify-content-between align-items-center">
+														<span class="fw-semibold">{{ forma.nombre }}</span>
+														<span class="badge bg-info-subtle text-info" *ngIf="forma.permiteCuotas">Permite cuotas</span>
+													</div>
+													<div class="small text-muted">{{ forma.descripcion || forma.tipo || 'Sin descripción disponible' }}</div>
+													<div class="small text-muted" *ngIf="forma.requiereReferencia">Requiere referencia al confirmar</div>
+												</div>
+											</label>
+										</div>
+										<div class="mt-3" *ngIf="formaPagoSeleccionada?.metadata as metadata">
+											<h6 class="small text-uppercase text-muted mb-1">Detalle</h6>
+											<ul class="small mb-0 ps-3">
+												<li *ngFor="let entry of metadata | keyvalue">{{ entry.key }}: {{ entry.value }}</li>
+											</ul>
+										</div>
+										<div class="mt-3" *ngIf="formaPagoSeleccionada?.requiereReferencia">
+											<label class="form-label small fw-semibold" for="referenciaPagoInput">Referencia / comprobante</label>
+											<input
+												id="referenciaPagoInput"
+												type="text"
+												class="form-control"
+												placeholder="Ej: Nº de transferencia"
+												[formControl]="metodoPagoReferenciaControl"
+												[class.is-invalid]="metodoPagoReferenciaControl.touched && metodoPagoReferenciaControl.invalid"
+											/>
+											<div class="invalid-feedback">Este campo es obligatorio para la forma seleccionada.</div>
+										</div>
+									</ng-container>
+								</ng-container>
+								<ng-template #sinFormasPago>
+									<div class="alert alert-info mb-0">No hay formas de pago habilitadas para esta app.</div>
+								</ng-template>
+							</div>
+							<hr>
+							<div class="d-flex justify-content-between align-items-center mb-3 fw-semibold">
+								<span>Total estimado</span>
+								<span class="fs-5">${{ (total + cotizacionCostoEstimado) | number:'1.2-2' }}</span>
+							</div>
+						</ng-container>
+						<div *ngIf="direccionSeleccionada" class="mb-3">
+							<h6 class="text-muted text-uppercase small mb-1">Entregar en</h6>
+							<p class="mb-0">
+								{{ direccionSeleccionada.calle }} {{ direccionSeleccionada.numero || '' }}
+								<span *ngIf="direccionSeleccionada.localidad?.nombre"> - {{ direccionSeleccionada.localidad?.nombre }}</span>
+							</p>
+						</div>
+						<div *ngIf="entregaOpcionSeleccionada" class="mb-3">
+							<h6 class="text-muted text-uppercase small mb-1">Método</h6>
+							<p class="mb-0">{{ entregaOpcionSeleccionada.nombre }}</p>
+						</div>
+							<button class="btn btn-success w-100" type="button" (click)="continuarHaciaPago()"
+								[disabled]="!entregaConfirmada || procesandoPedido || metodoPagoControl.invalid || formasPagoLoading || !formasPagoDisponibles.length || (formaPagoSeleccionada?.requiereReferencia && metodoPagoReferenciaControl.invalid)">
+							<span *ngIf="procesandoPedido" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+							{{ pedidoCreado ? 'Ir a pago' : 'Continuar a pago' }}
+						</button>
+						<div *ngIf="procesandoPedido" class="alert alert-warning mt-3 mb-0">Generando pedido...</div>
+						<div *ngIf="errorPago" class="alert alert-danger mt-3 mb-0">{{ errorPago }}</div>
+						<div *ngIf="pedidoCreado" class="alert alert-success mt-3 mb-0">
+							Pedido #{{ pedidoCreado.id }} creado correctamente.
+							<div *ngIf="pedidoEnvioRegistrado?.envioEstado?.descripcion" class="small text-muted">
+								Estado de envío: {{ pedidoEnvioRegistrado?.envioEstado?.descripcion }}
+							</div>
+							<div class="small mt-1" *ngIf="pedidoEnvioCostoCliente !== null">
+								Costo final de envío: {{ pedidoEnvioCostoCliente | number:'1.2-2' }}
+								<span *ngIf="pedidoEnvioPricing?.moneda"> {{ pedidoEnvioPricing?.moneda }}</span>
+							</div>
+							<div class="small text-muted" *ngIf="pedidoEnvioPricing as pricing">
+								<div *ngIf="pricing.distanciaKm !== undefined && pricing.distanciaKm !== null">Distancia: {{ pricing.distanciaKm | number:'1.1-1' }} km</div>
+								<div *ngIf="pricing.costoBase !== undefined && pricing.costoBase !== null">Costo base: {{ pricing.costoBase | number:'1.2-2' }}</div>
+								<div *ngIf="pricing.costoPorPedido !== undefined && pricing.costoPorPedido !== null">Cargo por pedido: {{ pricing.costoPorPedido | number:'1.2-2' }}</div>
+								<div *ngIf="pricing.costoPorKm !== undefined && pricing.costoPorKm !== null">Costo por km: {{ pricing.costoPorKm | number:'1.2-2' }}</div>
+								<div *ngIf="pricing.costoAplicado !== undefined && pricing.costoAplicado !== null">Costo aplicado: {{ pricing.costoAplicado | number:'1.2-2' }}</div>
+							</div>
+						</div>
+						<div *ngIf="mensajeEntrega" class="alert alert-info mt-3 mb-0">{{ mensajeEntrega }}</div>
+					</div>
+				</section>
+			</div>
+		</div>
+	</ng-container>
+</section>

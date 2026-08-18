@@ -1,0 +1,50 @@
+<section *ngIf="servicioOffline" class="alert alert-danger text-center mt-4">
+  <i class="bi bi-exclamation-triangle-fill me-2"></i>
+  Servicio no disponible por el momento, disculpe las molestias ocasionadas. Intente más tarde.
+</section>
+<div *ngIf="!servicioOffline" class="login-container">
+  <div class="login-logo">
+   
+    <img *ngIf="empresa?.apps?.[0]?.logo" [src]="'assets/logos/apps/' + this.getCodigoEmpresa() + '.png'" alt="Logo empresa" />
+  </div>
+  <div class="login-title">
+    Tienda en línea {{ empresa?.apps?.[0]?.nombre || empresa?.nombre || 'ShopCart' }}
+  </div>
+  <div class="login-description">
+    <p *ngIf="empresa?.apps?.[0]?.descripcion" class="app-descripcion">{{ empresa.apps[0].descripcion }}</p>
+    <div *ngIf="empresa?.apps?.[0]?.slogan_1 || empresa?.apps?.[0]?.slogan_2" class="app-slogans">
+      <span *ngIf="empresa?.apps?.[0]?.slogan_1" class="slogan slogan-1">{{ empresa.apps[0].slogan_1 }}</span>
+     <!-- <span *ngIf="empresa?.apps?.[0]?.slogan_2" class="slogan slogan-2">{{ empresa.apps[0].slogan_2 }}</span>-->
+    </div>
+    <p *ngIf="!empresa?.apps?.[0]?.descripcion && !empresa?.apps?.[0]?.slogan_1 && !empresa?.apps?.[0]?.slogan_2">Tu supermercado online para compras rápidas y seguras.</p>
+   
+  </div>
+
+
+
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="mb-3" *ngIf="empresa && empresa['apps'] && empresa['apps'].length">
+      <select class="form-select" [disabled]="empresa['apps'].length === 1" [(ngModel)]="selectedAppId" name="selectedAppId" [ngModelOptions]="{standalone: true}">
+        <option *ngFor="let app of empresa['apps']" [value]="app.id">{{ app.nombre }}</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Email</label>
+      <input type="email" class="form-control" formControlName="email" required />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Contraseña</label>
+      <input type="password" class="form-control" formControlName="password" required />
+    </div>
+    <button class="btn btn-primary" type="submit" [disabled]="form.invalid || loading">Ingresar</button>
+    <div *ngIf="error" class="alert alert-danger mt-2">{{ error }}</div>
+  </form>
+  <div style="text-align:center; margin-top:18px;">
+    <a routerLink="/auth/register" class="btn btn-link">¿No tienes cuenta? Regístrate</a>
+  </div>
+  <div style="text-align:center; margin-top: 10px; font-size: 0.9em; color: #888;">
+    Versión: {{ appVersion }}
+  </div>
+  <!-- El error ya se muestra dentro del form -->
+</div>

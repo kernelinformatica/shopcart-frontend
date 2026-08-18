@@ -1,0 +1,6 @@
+<ng-container *ngIf="isLoginPage(); else registerPage">
+  <app-login></app-login>
+</ng-container>
+<ng-template #registerPage>
+  <app-register></app-register>
+</ng-template>

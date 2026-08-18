@@ -1,0 +1,158 @@
+// Botón flotante para mostrar filtros
+.btn-float-filtros {
+	position: fixed;
+	top: 120px;
+	left: 0;
+	z-index: 1050;
+	width: 40px;
+	height: 40px;
+	min-width: 40px;
+	min-height: 40px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	font-size: 1.25rem;
+}
+
+.btn-float-filtros.btn-circle {
+	box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+
+// Navbar logo
+
+.navbar-logo {
+  display: none;
+}
+
+.navbar {
+	margin-bottom: 2.5rem;
+	box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+	background: #fff;
+	border-radius: 0 0 1.5rem 1.5rem;
+}
+
+.navbar-brand img {
+	border-radius: 8px;
+	background: #fff;
+	border: 1px solid #eee;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.producto-card {
+	transition: box-shadow 0.2s, transform 0.2s;
+	border-radius: 1.2rem;
+	overflow: hidden;
+	border: none;
+	background: #fff;
+	box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+	display: flex;
+	flex-direction: column;
+}
+.producto-card:hover {
+	box-shadow: 0 12px 32px rgba(0,0,0,0.16);
+	transform: translateY(-6px) scale(1.04);
+}
+.producto-card .card-img-top {
+	object-fit: cover;
+	height: 200px;
+	background: #f8f9fa;
+	border-bottom: 1px solid #f1f1f1;
+}
+.producto-card .card-title {
+	font-size: 1.15rem;
+	font-weight: 700;
+	color: #1a3c6b;
+	margin-bottom: 0.5rem;
+}
+.producto-card .card-text {
+	color: #555;
+	font-size: 1rem;
+	margin-bottom: 0.75rem;
+}
+.producto-card .btn-success {
+	font-size: 1rem;
+	border-radius: 0.5rem;
+	padding: 0.4rem 1.2rem;
+	font-weight: 600;
+	box-shadow: 0 2px 8px rgba(40,167,69,0.08);
+}
+.producto-card .btn-success:hover {
+	background: #218838;
+	color: #fff;
+}
+.producto-card .fw-bold.text-primary {
+	font-size: 1.1rem;
+	color: #007bff !important;
+}
+.producto-card .mt-auto {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.global-loading-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(255, 255, 255, 0.72);
+	z-index: 2500;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	backdrop-filter: blur(2px);
+}
+
+.global-loading-spinner {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.9rem;
+	padding: 1.5rem 1.75rem;
+	border-radius: 1.25rem;
+	background: rgba(255, 255, 255, 0.92);
+	box-shadow: 0 18px 50px rgba(15, 23, 42, 0.18);
+}
+
+.global-loading-message {
+	font-size: 1rem;
+	font-weight: 600;
+	color: #1f2937;
+}
+
+.marca-logo-badge {
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	object-fit: contain;
+	background: #fff;
+}
+@media (max-width: 576px) {
+	.navbar-brand span, .navbar-brand img {
+		font-size: 1rem;
+		width: 32px;
+		height: 32px;
+	}
+	.producto-card .card-img-top {
+		height: 140px;
+	}
+	.dashboard-title {
+		font-size: 1.3rem;
+	}
+}
+.producto-card .btn-success {
+	font-size: 0.95rem;
+	border-radius: 0.5rem;
+}
+
+@media (max-width: 576px) {
+	.navbar-brand span, .navbar-brand img {
+		font-size: 1rem;
+		width: 32px;
+		height: 32px;
+	}
+	.producto-card .card-img-top {
+		height: 140px;
+	}
+}

@@ -1,0 +1,220 @@
+@use "bootstrap/scss/bootstrap" as *;
+@use './app/features/public/pedido/mis-compras-modal/modal-backdrop-custom.scss' as *;
+@import url('https://fonts.googleapis.com/css?family=Lato:400,700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css');
+@import "~@angular/material/prebuilt-themes/indigo-pink.css";
+// Ícono comando inline para agregar categoría raíz
+.icono-root-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #28a745;
+  cursor: pointer;
+  transition: filter 0.15s, box-shadow 0.15s;
+  box-shadow: 0 1px 4px #28a74522;
+  &:hover {
+    filter: brightness(1.15) drop-shadow(0 1px 2px #28a74533);
+    box-shadow: 0 2px 8px #28a74533;
+  }
+  i {
+    color: #fff !important;
+    font-size: 1em;
+    margin: 0;
+    line-height: 1;
+  }
+}
+
+// Botón solo icono para acciones rápidas
+.btn-icon-only {
+  padding: 0 !important;
+  min-width: 32px;
+  min-height: 32px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50% !important;
+}
+
+// Buscador elegante para input de artículos en admin de categorías
+.buscador-articulos-elegante {
+  display: flex;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #d1d5db;
+  border-radius: 18px;
+  padding: 2px 10px 2px 8px;
+  min-width: 180px;
+  max-width: 320px;
+  width: 260px;
+  height: 32px;
+  box-shadow: 0 1px 2px 0 rgba(60,60,60,0.03);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  &:focus-within {
+    border-color: #6366f1;
+    box-shadow: 0 2px 8px 0 rgba(99,102,241,0.08);
+    background: #f1f5ff;
+  }
+  .icono-buscar {
+    color: #6366f1;
+    font-size: 1.1em;
+    margin-right: 6px;
+    display: flex;
+    align-items: center;
+  }
+  input[type="text"] {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.98rem;
+    padding: 2px 0 2px 0;
+    width: 100%;
+    min-width: 0;
+    color: #222;
+    font-family: inherit;
+    box-shadow: none;
+    transition: color 0.2s;
+  }
+}
+
+// Buscador de artículos admin: ultra compacto, sin borde, flat
+.buscador-articulos-admin-flat.mat-form-field {
+  margin-bottom: 0 !important;
+  .mat-form-field-wrapper {
+    padding-bottom: 0 !important;
+    min-height: 24px !important;
+    height: 24px !important;
+  }
+  .mat-form-field-flex {
+    min-height: 24px !important;
+    height: 24px !important;
+    align-items: center;
+    border-bottom: 1px solid #d1d5db !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  .mat-input-element {
+    min-height: 20px !important;
+    height: 20px !important;
+    font-size: 0.92rem;
+    padding: 1px 6px !important;
+    line-height: 1.1;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .mat-form-field-underline,
+  .mat-form-field-outline {
+    display: none !important;
+  }
+}
+
+// Estilo compacto para el buscador de artículos en admin de categorías
+.buscador-articulos-admin.mat-form-field {
+  margin-bottom: 0 !important;
+  .mat-form-field-wrapper {
+    padding-bottom: 0 !important;
+    min-height: 32px !important;
+    height: 32px !important;
+  }
+  .mat-form-field-flex {
+    min-height: 32px !important;
+    height: 32px !important;
+    align-items: center;
+  }
+  .mat-input-element {
+    min-height: 28px !important;
+    height: 28px !important;
+    font-size: 0.95rem;
+    padding: 2px 8px !important;
+    line-height: 1.2;
+  }
+  .mat-form-field-outline {
+    min-height: 32px !important;
+    height: 32px !important;
+  }
+}
+
+// Ícono comando inline para plegado masivo
+.icono-root-collapse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #6c757d;
+  cursor: pointer;
+  transition: filter 0.15s, box-shadow 0.15s;
+  box-shadow: 0 1px 4px #6c757d22;
+  &:hover {
+    filter: brightness(1.15) drop-shadow(0 1px 2px #6c757d33);
+    box-shadow: 0 2px 8px #6c757d33;
+  }
+  i {
+    color: #fff !important;
+    font-size: 1em;
+    margin: 0;
+    line-height: 1;
+  }
+}
+
+:root {
+  --app-primary: #778d5f;
+  --app-navbar-bg: #778d5f;
+  --app-navbar-text: #ffffff;
+  --app-navbar-muted: rgba(255, 255, 255, 0.85);
+
+  --gradient-global: linear-gradient(135deg, #fcfcfc 0%, #5f7446 100%);
+}
+
+
+body {
+  font-family: 'Lato', Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  /* background: #f7fafd; */
+  padding-top: 0;
+}
+
+html {
+  font-size: 14px;
+}
+
+
+#mercadoPagoEmbed {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-height: 480px;
+  max-height: 70vh;
+  overflow: auto;
+}
+#mercadoPagoEmbed iframe {
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 480px !important;
+  max-height: 70vh;
+  border: 0;
+}
+.mat-dialog-container {
+  transform: translateY(-100%);
+  animation: slideDown 0.3s ease-out forwards;
+}
+
+@keyframes slideDown {
+  to {
+    transform: translateY(0);
+  }
+}

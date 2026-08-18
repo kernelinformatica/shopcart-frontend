@@ -1,0 +1,481 @@
+<section class="container py-3 usuario-form">
+
+  <!-- Loading -->
+  <div *ngIf="cargando" class="listado-loading-overlay" aria-live="polite" aria-busy="true">
+    <div class="listado-loading-box">
+      <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+      <div class="listado-loading-message">{{ esEdicion ? 'Cargando usuario...' : 'Preparando formulario...' }}</div>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero-panel mb-4">
+    <div>
+      <p class="eyebrow mb-2">{{ esEdicion ? 'Editar usuario' : 'Nuevo usuario' }}</p>
+      <h2 class="mb-2">
+        <i class="bi" [ngClass]="esEdicion ? 'bi-person-gear' : 'bi-person-plus-fill'"></i>
+        {{ esEdicion ? 'Editar datos del usuario' : 'Crear nuevo usuario' }}
+      </h2>
+      <p class="text-muted mb-0">
+        {{ esEdicion ? 'Modificá los datos, permisos, perfil y accesos de este usuario.' : 'Completá el formulario para crear un nuevo usuario en el sistema.' }}
+      </p>
+    </div>
+    <div class="hero-actions">
+      <button class="icon-action-btn icon-action-btn-light" type="button" (click)="volver()" title="Volver al listado">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+        <span class="visually-hidden">Volver</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Alertas -->
+  <div *ngIf="error" class="alert alert-danger d-flex align-items-center gap-2 mb-3">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span>{{ error }}</span>
+  </div>
+  <div *ngIf="mensaje" class="alert alert-success d-flex align-items-center gap-2 mb-3">
+    <i class="bi bi-check-circle-fill"></i>
+    <span>{{ mensaje }}</span>
+  </div>
+
+  <form (ngSubmit)="guardar()" #formRef="ngForm" *ngIf="!cargando" novalidate>
+    <div class="row g-4">
+
+      <!-- ── Datos personales ─────────────────────────────────────────────── -->
+      <div class="col-12">
+        <div class="form-section-card">
+          <div class="form-section-header form-section-header-collapsible">
+            <i class="bi bi-person-vcard-fill"></i>
+            <div>
+              <h5 class="mb-0">Datos personales</h5>
+              <small class="text-muted">Nombre, apellido, contacto y dirección.</small>
+            </div>
+            <button type="button" class="section-toggle-btn ms-auto" (click)="toggleSeccion('datosPersonales')" [attr.aria-expanded]="seccionesAbiertas.datosPersonales" aria-label="Plegar o desplegar Datos personales">
+              <i class="bi" [ngClass]="seccionesAbiertas.datosPersonales ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+            </button>
+          </div>
+          <div class="form-section-body" *ngIf="seccionesAbiertas.datosPersonales">
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label required">Nombre</label>
+                <input
+                  class="form-control"
+                  type="text"
+                  [(ngModel)]="form.nombre"
+                  name="nombre"
+                  placeholder="Nombre del usuario"
+                  required
+                  autocomplete="given-name"
+                />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label required">Apellido</label>
+                <input
+                  class="form-control"
+                  type="text"
+                  [(ngModel)]="form.apellido"
+                  name="apellido"
+                  placeholder="Apellido del usuario"
+                  required
+                  autocomplete="family-name"
+                />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label">Teléfono</label>
+                <input
+                  class="form-control"
+                  type="tel"
+                  [(ngModel)]="form.telefono"
+                  name="telefono"
+                  placeholder="Número de teléfono"
+                  autocomplete="tel"
+                />
+              </div>
+              <div class="col-12 col-md-6">
+                <label class="form-label">Dirección</label>
+                <input
+                  class="form-control"
+                  type="text"
+                  [(ngModel)]="form.direccion"
+                  name="direccion"
+                  placeholder="Calle y número"
+                  autocomplete="street-address"
+                />
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label">Código postal</label>
+                <input
+                  class="form-control"
+                  type="text"
+                  [(ngModel)]="form.codigopostal"
+                  name="codigopostal"
+                  placeholder="Ej: 1000"
+                  autocomplete="postal-code"
+                />
+              </div>
+              <div class="col-12 col-md-8">
+                <label class="form-label">Localidad</label>
+                <div class="localidad-autocomplete">
+                  <input
+                    class="form-control"
+                    type="search"
+                    [(ngModel)]="busquedaLocalidad"
+                    name="busquedaLocalidad"
+                    placeholder="Escribí al menos 2 letras"
+                    (ngModelChange)="buscarLocalidades($event)"
+                    (focus)="mostrarSugerenciasLocalidad = busquedaLocalidad.trim().length >= 2"
+                    autocomplete="off"
+                  />
+                  <button *ngIf="localidadSeleccionada" type="button" class="localidad-clear-btn" (click)="limpiarLocalidad()" title="Quitar localidad" aria-label="Quitar localidad">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                  </button>
+                  <div class="localidad-sugerencias" *ngIf="mostrarSugerenciasLocalidad">
+                    <button
+                      *ngFor="let loc of getLocalidadesFiltradas()"
+                      type="button"
+                      class="localidad-sugerencia"
+                      (click)="seleccionarLocalidad(loc)"
+                    >
+                      <strong>{{ loc.nombre }}</strong>
+                      <span>{{ loc.provincia }}{{ loc.codigopostal ? ' - CP ' + loc.codigopostal : '' }}</span>
+                    </button>
+                    <div *ngIf="!cargandoLocalidades && !getLocalidadesFiltradas().length" class="localidad-sin-resultados">
+                      No se encontraron coincidencias.
+                    </div>
+                    <div *ngIf="cargandoLocalidades" class="localidad-sin-resultados">
+                      Buscando localidades...
+                    </div>
+                  </div>
+                </div>
+                <input type="hidden" [(ngModel)]="form.localidadId" name="localidadId" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Acceso y seguridad ───────────────────────────────────────────── -->
+      <div class="col-12">
+        <div class="form-section-card">
+          <div class="form-section-header form-section-header-collapsible">
+            <i class="bi bi-lock-fill"></i>
+            <div>
+              <h5 class="mb-0">Acceso y seguridad</h5>
+              <small class="text-muted">Email, contraseña y credenciales de acceso.</small>
+            </div>
+            <button type="button" class="section-toggle-btn ms-auto" (click)="toggleSeccion('accesoSeguridad')" [attr.aria-expanded]="seccionesAbiertas.accesoSeguridad" aria-label="Plegar o desplegar Acceso y seguridad">
+              <i class="bi" [ngClass]="seccionesAbiertas.accesoSeguridad ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+            </button>
+          </div>
+          <div class="form-section-body" *ngIf="seccionesAbiertas.accesoSeguridad">
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label required">Email</label>
+                <input
+                  class="form-control"
+                  type="email"
+                  [(ngModel)]="form.email"
+                  name="email"
+                  placeholder="correo@ejemplo.com"
+                  required
+                  autocomplete="email"
+                />
+              </div>
+              <div class="col-12 col-md-3">
+                <label class="form-label" [class.required]="!esEdicion">
+                  {{ esEdicion ? 'Nueva contraseña (opcional)' : 'Contraseña' }}
+                </label>
+                <input
+                  class="form-control"
+                  type="password"
+                  [(ngModel)]="form.password"
+                  name="password"
+                  placeholder="{{ esEdicion ? 'Dejar en blanco para no cambiar' : 'Contraseña' }}"
+                  [required]="!esEdicion"
+                  autocomplete="new-password"
+                />
+              </div>
+              <div class="col-12 col-md-3">
+                <label class="form-label" [class.required]="!esEdicion">Confirmar contraseña</label>
+                <input
+                  class="form-control"
+                  type="password"
+                  [(ngModel)]="form.passwordConfirm"
+                  name="passwordConfirm"
+                  placeholder="Repetir contraseña"
+                  autocomplete="new-password"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Perfil y permisos ───────────────────────────────────────────── -->
+      <div class="col-12 col-lg-6">
+        <div class="form-section-card h-100">
+          <div class="form-section-header form-section-header-collapsible">
+            <i class="bi bi-shield-check-fill"></i>
+            <div>
+              <h5 class="mb-0">Perfil de usuario</h5>
+              <small class="text-muted">Rol y empresa asociada.</small>
+            </div>
+            <button type="button" class="section-toggle-btn ms-auto" (click)="toggleSeccion('perfilPermisos')" [attr.aria-expanded]="seccionesAbiertas.perfilPermisos" aria-label="Plegar o desplegar Perfil de usuario">
+              <i class="bi" [ngClass]="seccionesAbiertas.perfilPermisos ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+            </button>
+          </div>
+          <div class="form-section-body" *ngIf="seccionesAbiertas.perfilPermisos">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label">Perfil / Rol</label>
+                <select class="form-select" [(ngModel)]="form.rolId" (ngModelChange)="onRolChange($event)" name="rolId">
+                  <option [ngValue]="null">— Seleccionar perfil —</option>
+                  <option *ngFor="let rol of roles" [ngValue]="rol.id">
+                    {{  rol.nombre }}
+                  </option>
+                </select>
+                <div class="field-hint mt-1">Define los permisos base del usuario en el sistema.</div>
+              </div>
+              <div class="col-12">
+               
+                <input 
+                  class="form-control"
+                  type="hidden"
+                  [ngModel]="form.empresaId"
+                  (ngModelChange)="onEmpresaChange($event)"
+                  [(ngModel)]="form.empresaId"
+                  name="empresaId"
+                  placeholder="ID de empresa"
+                  min="1"
+                />
+                
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Apps habilitadas ───────────────────────────────────────────── -->
+      <div class="col-12 col-lg-6">
+        <div class="form-section-card h-100">
+          <div class="form-section-header form-section-header-collapsible">
+            <i class="bi bi-grid-3x3-gap-fill"></i>
+            <div>
+              <h5 class="mb-0">Apps habilitadas</h5>
+              <small class="text-muted">Seleccioná las apps a las que tendrá acceso.</small>
+            </div>
+            <button type="button" class="section-toggle-btn ms-auto" (click)="toggleSeccion('appsHabilitadas')" [attr.aria-expanded]="seccionesAbiertas.appsHabilitadas" aria-label="Plegar o desplegar Apps habilitadas">
+              <i class="bi" [ngClass]="seccionesAbiertas.appsHabilitadas ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+            </button>
+          </div>
+          <div class="form-section-body" *ngIf="seccionesAbiertas.appsHabilitadas">
+            <div *ngIf="!apps.length" class="text-muted small">No hay apps disponibles.</div>
+            <select class="form-select" multiple size="6" [(ngModel)]="form.appIds" name="appIds">
+              <option *ngFor="let app of apps; trackBy: trackByAppId" [ngValue]="app.id">
+                {{ app.nombre }}
+              </option>
+            </select>
+            <div class="field-hint mt-2">
+              <i class="bi bi-info-circle me-1"></i>
+              Seleccionadas: {{ (form.appIds?.length || 0) }} app{{ (form.appIds?.length || 0) !== 1 ? 's' : '' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Permisos por rol/app ─────────────────────────────────────── -->
+      <div class="col-12">
+        <div class="form-section-card">
+          <div class="form-section-header form-section-header-collapsible">
+            <i class="bi bi-key-fill"></i>
+            <div>
+              <h5 class="mb-0">Permisos por perfil y app</h5>
+              <small class="text-muted">Elegí un rol y una app, revisá lo asignado y guardá los cambios.</small>
+            </div>
+            <button type="button" class="section-toggle-btn ms-auto" (click)="toggleSeccion('permisos')" [attr.aria-expanded]="seccionesAbiertas.permisos" aria-label="Plegar o desplegar Permisos por perfil y app">
+              <i class="bi" [ngClass]="seccionesAbiertas.permisos ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+            </button>
+          </div>
+          <div class="form-section-body" *ngIf="seccionesAbiertas.permisos">
+            <div *ngIf="esEdicion" class="alert alert-info d-flex align-items-start gap-2 mb-3">
+              <i class="bi bi-info-circle-fill mt-1"></i>
+              <div>
+                <strong>Vista informativa.</strong>
+                <div class="small mb-0">Los permisos se administran por perfil/rol. Acá solo ves qué rol tiene asignado este usuario y los permisos que hereda.</div>
+              </div>
+            </div>
+
+            <div class="row g-3 align-items-end mb-3">
+              <div class="col-12 col-md-4">
+                <label class="form-label">Rol</label>
+                <select class="form-select" [(ngModel)]="form.rolId" (ngModelChange)="onRolChange($event)" name="rolIdPermisos" [disabled]="esEdicion">
+                  <option [ngValue]="null">Seleccionar rol</option>
+                  <option *ngFor="let rol of roles" [ngValue]="rol.id">
+                    {{ rol.alias ? rol.alias + ' - ' : '' }}{{ rol.nombre }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label">App</label>
+                <select class="form-select" [(ngModel)]="appPermisosId" (ngModelChange)="onAppPermisosChange($event)" name="appPermisosId" [disabled]="esEdicion">
+                  <option [ngValue]="null">Seleccionar app</option>
+                  <option *ngFor="let app of apps; trackBy: trackByAppId" [ngValue]="app.id">
+                    {{ app.nombre }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-12 col-md-4 d-flex gap-2 justify-content-md-end" *ngIf="!esEdicion">
+                <button title="Cargar permisos" type="button" class="icon-action-btn icon-action-btn-sm icon-action-btn-light" (click)="cargarCatalogoPermisos()" [disabled]="cargandoPermisos" aria-label="Cargar permisos">
+                  <span *ngIf="cargandoPermisos" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+                  <span class="visually-hidden">Cargar permisos</span>
+                </button>
+
+                <button type="button" *ngIf="permisosSeleccionados.size > 0" class="icon-action-btn icon-action-btn-sm icon-action-btn-light" (click)="asignarPermisos()" [attr.disabled]="guardandoPermisos || !permisosCatalogo.length || !permisosSeleccionados.size ? '' : null" title="Grabar permisos" aria-label="Grabar permisos">
+                  <span *ngIf="guardandoPermisos" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  <i class="bi bi-floppy" aria-hidden="true"></i>
+                  <span class="visually-hidden">Guardar permisos</span>
+                </button>
+
+                <button type="button" *ngIf="permisosSeleccionados.size > 0" class="icon-action-btn icon-action-btn-sm icon-action-btn-light" (click)="quitarPermisos()" [attr.disabled]="quitandoPermisos || !permisosCatalogo.length || !permisosSeleccionados.size ? '' : null" title="Quitar permisos" aria-label="Quitar permisos">
+                  <span *ngIf="quitandoPermisos" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  <i class="bi bi-trash3" aria-hidden="true"></i>
+                  <span class="visually-hidden">Quitar permisos</span>
+                </button>
+              </div>
+            </div>
+            <div *ngIf="error" class="alert alert-danger mb-3">{{ error }}</div>
+            <div *ngIf="mensajePermisos" class="alert alert-success mb-3">{{ mensajePermisos }}</div>
+
+            <div class="row g-3 mb-3" *ngIf="!esEdicion">
+              <div class="col-12 col-md-6">
+                <input class="form-control" type="search" [(ngModel)]="busquedaPermiso" name="busquedaPermiso" placeholder="Buscar permiso por nombre, alias o módulo" />
+              </div>
+              <div class="col-12 col-md-6 text-md-end">
+                <div class="field-hint">
+                  {{ permisosSeleccionados.size }} permiso{{ permisosSeleccionados.size !== 1 ? 's' : '' }} seleccionado{{ permisosSeleccionados.size !== 1 ? 's' : '' }}
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="cargandoPermisos" class="text-muted">Cargando catálogo de permisos...</div>
+            <div *ngIf="!cargandoPermisos && !getPermisosFiltrados().length" class="text-muted">
+              Perfil o rol asignado: <strong>{{ getRolSeleccionadoTexto() }}</strong>
+            </div>
+
+            <div *ngIf="getGruposPermisos().length" class="permisos-groups">
+              <div class="permiso-group" *ngFor="let grupo of getGruposPermisos()">
+                <div class="permiso-group-header hero-panel permiso-group-hero">
+                  <div class="permiso-group-title-wrap">
+                    <div class="permiso-group-kicker">Grupo de permisos</div>
+                    <h6 class="permiso-group-title mb-1">{{ grupo.nombre.toUpperCase() }}</h6>
+                    <small class="permiso-group-subtitle">{{ grupo.permisos.length }} permiso{{ grupo.permisos.length !== 1 ? 's' : '' }} disponible{{ grupo.permisos.length !== 1 ? 's' : '' }} en este bloque</small>
+                  </div>
+                  <div class="permiso-group-badges">
+                    <span class="badge rounded-pill text-bg-light border permiso-group-badge">
+                      {{ contarPermisosAsignados(grupo) }} seleccionados
+                    </span>
+                  </div>
+                </div>
+
+                <div class="permisos-grid">
+                  <div 
+                    *ngFor="let permiso of grupo.permisos"
+                    class="permiso-card"
+                    [class.active]="isPermisoSeleccionado(permiso.id)"
+                    [class.asignado]="permiso.asignado"
+                  >
+                 
+                    <div class="permiso-card-header" >
+                      <span class="permiso-state" [class.on]="isPermisoSeleccionado(permiso.id)">
+                        <i class="bi" [ngClass]="isPermisoSeleccionado(permiso.id) ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+                        {{ isPermisoSeleccionado(permiso.id) ? 'Incluido' : 'Disponible' }}
+                      </span>
+                      <span class="permiso-state permiso-state-assigned" *ngIf="permiso.asignado">
+                        Asignado actualmente
+                      </span>
+                    </div>
+                    <div class="permiso-card-title">{{ permiso.nombre }}</div>
+                    <div class="permiso-card-meta">
+                      <span *ngIf="permiso.alias">{{ permiso.alias }}</span>
+                      <span *ngIf="permiso.modulo">Módulo: {{ permiso.modulo }}</span>
+                    </div>
+                    <div class="permiso-card-desc" *ngIf="permiso.descripcion">{{ permiso.descripcion }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Cuenta corriente ───────────────────────────────────────────── -->
+      <div class="col-12">
+        <div class="form-section-card">
+          <div class="form-section-header form-section-header-collapsible">
+            <i class="bi bi-credit-card-2-front-fill"></i>
+            <div>
+              <h5 class="mb-0">Cuenta corriente</h5>
+              <small class="text-muted">Número de cuenta, estado de confirmación y saldo.</small>
+            </div>
+            <button type="button" class="section-toggle-btn ms-auto" (click)="toggleSeccion('cuentaCorriente')" [attr.aria-expanded]="seccionesAbiertas.cuentaCorriente" aria-label="Plegar o desplegar Cuenta corriente">
+              <i class="bi" [ngClass]="seccionesAbiertas.cuentaCorriente ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+            </button>
+          </div>
+          <div class="form-section-body" *ngIf="seccionesAbiertas.cuentaCorriente">
+            <div class="row g-3 align-items-end">
+              <div class="col-12 col-md-4">
+                <label class="form-label">Nro. de cuenta corriente</label>
+                <input
+                  class="form-control"
+                  type="text"
+                  [(ngModel)]="form.nrocuentacorriente"
+                  name="nrocuentacorriente"
+                  placeholder="Ej: CC123456"
+                  (blur)="normalizarCuentaCorrienteVisual()"
+                />
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label">Estado de cuenta</label>
+                <select class="form-select" [(ngModel)]="form.nrocuentacorrienteConfirmada" name="nrocuentacorrienteConfirmada">
+                  <option [ngValue]="0">Pendiente de confirmación</option>
+                  <option [ngValue]="1">Confirmada</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label">Saldo cuenta corriente</label> <small><i> (Proximamente editable)</i></small>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input disabled
+                    class="form-control"
+                    type="number"
+                    step="0.01"
+                    [(ngModel)]="form.saldocuentacorriente"
+                    name="saldocuentacorriente"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Botones ─────────────────────────────────────────────────────── -->
+      <div class="col-12">
+        <div class="form-actions">
+          <button type="button" class="icon-action-btn icon-action-btn-sm icon-action-btn-light" (click)="volver()" [disabled]="guardando" title="Cancelar" aria-label="Cancelar">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+            <span class="visually-hidden">Cancelar</span>
+          </button>
+          <button type="submit" class="icon-action-btn icon-action-btn-sm icon-action-btn-light" [disabled]="guardando" title="Guardar cambios" aria-label="Guardar cambios">
+            <span *ngIf="guardando" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            <i *ngIf="!guardando" class="bi bi-floppy" aria-hidden="true"></i>
+            <span class="visually-hidden">{{ guardando ? 'Guardando...' : (esEdicion ? 'Guardar cambios' : 'Crear usuario') }}</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </form>
+</section>

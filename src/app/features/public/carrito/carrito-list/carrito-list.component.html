@@ -1,0 +1,58 @@
+<!--<div class="p-4 bg-light border rounded">
+	<h2>Carrito de compras</h2>
+
+	<div *ngIf="loading" class="alert alert-info">Cargando carrito...</div>
+	<div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+	<div *ngIf="carrito && carrito.items.length > 0; else vacio">
+		<table class="table align-middle">
+			<thead>
+				<tr>
+					<th>Producto</th>
+					<th>Precio</th>
+					<th>Cantidad</th>
+					<th>Subtotal</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr *ngFor="let item of carrito.items">
+					<td>{{ item.producto.nombre }}</td>
+					<td>
+						${{ getPrecioVisual(item) | number:'1.2-2' }}
+						<span *ngIf="getPromoXPorY(item.producto) && item.cantidad >= getPromoXPorY(item.producto)?.valor" class="text-secondary ms-1" style="font-size: 0.95rem; font-weight: normal;">C/U por unidad</span>
+					</td>
+					<td>
+						<div class="input-group input-group-sm" style="max-width: 120px;">
+							<button class="btn btn-outline-secondary" (click)="disminuir(item)" [disabled]="loading">-</button>
+							<input class="form-control text-center" [value]="item.cantidad" readonly />
+							<button class="btn btn-outline-secondary" (click)="aumentar(item)" [disabled]="loading">+</button>
+						</div>
+					</td>
+					<td>
+						${{ getSubtotal(item) | number:'1.2-2' }}
+					</td>
+					<td>
+						<button class="btn btn-danger btn-sm" (click)="eliminar(item)" [disabled]="loading">Eliminar</button>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<div *ngIf="carrito.promocionesAplicadas?.length" class="mb-2">
+			<span class="badge bg-success me-2" *ngFor="let promo of carrito.promocionesAplicadas">
+				Promo: {{ promo.nombre }} <span *ngIf="promo.tipo || promo.promocionTipo?.alias">({{ promo.tipo || promo.promocionTipo?.alias }})</span>
+			</span>
+		</div>
+
+		<div class="d-flex justify-content-end align-items-center">
+			<h4 class="me-3">Total: ${{ carrito?.total | number:'1.2-2' }}</h4>
+			<a class="btn btn-primary" [routerLink]="['/pedidos']" [class.disabled]="loading || !(carrito?.items?.length)">Confirmar pedido</a>
+		</div>
+	</div>
+
+	<ng-template #vacio>
+		<div class="alert alert-warning">El carrito está vacío.</div>
+	</ng-template>
+</div>
+-->

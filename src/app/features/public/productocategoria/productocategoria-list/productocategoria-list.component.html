@@ -1,0 +1,44 @@
+<div *ngIf="loading" class="text-center my-5">
+	<div class="spinner-border text-primary" role="status">
+		<span class="visually-hidden">Cargando...</span>
+	</div>
+</div>
+<div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+<section class="catalogo-section container mb-5">
+	<div class="productocategoria-toolbar d-flex flex-wrap align-items-center gap-2 mb-4 ps-2">
+		<div>
+			<h2 class="mb-1 fw-bold fs-3 text-start">Categorías</h2>
+			<p class="mb-0 text-muted small text-start">Seleccioná una categoría para ver sus productos</p>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-12 col-md-10 col-lg-8">
+			<ul class="list-group categoria-list-group shadow-sm rounded-4 p-0 text-start" style="margin-left:0;">
+				<ng-container *ngFor="let cat of categoriasTree">
+					<li class="list-group-item d-flex align-items-center py-3 px-3 fs-5 categoria-list-item text-start" [class.text-muted]="cat.cantidadProductos === 0">
+						<span style="cursor: pointer;"
+									(click)="onCategoriaClick(cat, $event)"
+									[class.fw-bold]="cat.cantidadProductos > 0 && (!cat.children || cat.children.length === 0)"
+									[class.text-primary]="cat.cantidadProductos > 0 && (!cat.children || cat.children.length === 0)">
+							{{ cat.nombre }}<span *ngIf="cat.cantidadProductos > 0" class="cantidad-productos"> ({{ cat.cantidadProductos }})</span>
+						</span>
+					</li>
+					<!-- Subcategorías -->
+					<ul *ngIf="cat.children && cat.children.length" class="list-group ms-4 border-0 bg-transparent text-start">
+						<ng-container *ngFor="let sub of cat.children">
+							<li class="list-group-item d-flex align-items-center py-2 px-3 fs-6 categoria-list-item text-start" [class.text-muted]="sub.cantidadProductos === 0">
+								<span style="cursor: pointer;"
+											(click)="onCategoriaClick(sub, $event)"
+											[class.fw-bold]="sub.cantidadProductos > 0 && (!sub.children || sub.children.length === 0)"
+											[class.text-primary]="sub.cantidadProductos > 0 && (!sub.children || sub.children.length === 0)">
+									{{ sub.nombre }}<span *ngIf="sub.cantidadProductos > 0" class="cantidad-productos"> ({{ sub.cantidadProductos }})</span>
+								</span>
+							</li>
+						</ng-container>
+					</ul>
+				</ng-container>
+			</ul>
+		</div>
+	</div>
+</section>

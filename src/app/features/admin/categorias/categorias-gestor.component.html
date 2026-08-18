@@ -1,0 +1,112 @@
+<app-global-loading [show]="loadingAdmin" message="Procesando..."></app-global-loading>
+<div class="container py-4 d-flex flex-column justify-content-center" style="min-height: 80vh;">
+  <div class="w-100" style="max-width: 100%;">
+    <div class="mb-3">
+      <div class="row align-items-center mb-2" style="min-height:48px;">
+        <div class="col">
+          <h2 class="fw-bold mb-1 text-start m-0" style="letter-spacing:0.5px;"><i class="bi bi-tags"></i> Gestión de Categorías</h2>
+          
+       
+        </div>
+      
+        <div class="col-auto d-flex align-items-center gap-2 justify-content-end">
+          <ng-container *ngIf="categoriaSeleccionada">
+            <div class="buscador-articulos-elegante me-2">
+              <span class="icono-buscar"><i class="bi bi-search"></i></span>
+              <input type="text" #inputBusqueda [(ngModel)]="busquedaArticulo" (ngModelChange)="onBuscarArticulo()" placeholder="Buscar artículos..." autocomplete="off" />
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    <!-- Botón solo en la columna izquierda, arriba del árbol -->
+    <div class="row g-4">
+      <div class="col-md-5">
+        <div class="d-flex align-items-center" style="gap:6px; margin-bottom: 2px;">
+          <span class="fw-bold text-start" style="letter-spacing:0.5px; padding-bottom: 0; margin-bottom: 0; line-height: 1.1; font-size: 1.08em;">
+            <i class="bi bi-diagram-3"></i> Árbol de categorías
+          </span>
+          <span class="icono-root-collapse" title="Plegar todas las categorías" (click)="plegarTodasCategorias()">
+            <i class="bi bi-layers-half"></i>
+          </span>
+          <span class="icono-root-add" title="Nueva categoría raíz" (click)="abrirModalNuevaCategoria()">
+            <i class="bi bi-plus-lg"></i>
+          </span>
+        </div>
+       
+      <!-- Aquí puedes agregar más acciones en el futuro -->
+    </div>
+    <div class="row g-4">
+      <div class="col-md-5">
+        <div *ngIf="loading" class="text-center my-3">
+          <mat-spinner diameter="32"></mat-spinner>
+        </div>
+        <div *ngIf="!loading && categorias.length === 0" class="alert alert-info text-center">No hay categorías cargadas.</div>
+        <app-categoria-arbol
+          *ngIf="!loading && categorias.length > 0"
+          [categorias]="categorias"
+          [plegadas]="plegadas"
+          (plegadasChange)="plegadas = $event"
+          (seleccionar)="onSeleccionarCategoria($event)"
+          (agregarSub)="onAgregarSubcategoria($event)"
+          (editar)="onEditarCategoriaArbol($event)"
+          (editarInline)="onEditarCategoriaArbol($event)"
+          (eliminar)="onEliminarCategoria($event)"
+          (actualizarOrden)="onActualizarOrdenCategoriaUI($event)">
+        </app-categoria-arbol>
+      </div>
+      <div class="col-md-7" *ngIf="categoriaSeleccionada" id="panel-articulos-categoria" style="max-height:70vh;overflow-y:auto;">
+        <mat-card>
+          <h6 class="fw-bold mb-2"><i class="bi bi-link-45deg me-1"></i>Artículos en categoría {{ categoriaSeleccionada?.nombre }}</h6>
+          <div *ngIf="mensajeAsociar" class="alert alert-info py-1 px-2 mb-2 small">{{ mensajeAsociar }}</div>
+          <div *ngIf="articulosBusqueda.length > 0" class="mb-3">
+            <div class="fw-semibold small text-secondary mb-1">Resultados de búsqueda:</div>
+            <ng-container *ngIf="permisosService.tienePermiso('categorias_relacionar')">
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <input type="checkbox" class="form-check-input" style="width:1.1em;height:1.1em;" [checked]="todosBusquedaSeleccionados" (change)="toggleSeleccionTodosBusqueda($event)">
+                <span class="small">Seleccionar todos</span>
+                <button class="btn btn-outline-success btn-sm py-0 px-2 ms-2" [disabled]="busquedaSeleccionados.size === 0" (click)="asociarSeleccionBusqueda()">
+                  <i class="bi bi-link-45deg me-1"></i>Asociar seleccionados
+                </button>
+              </div>
+            </ng-container>
+            <div class="d-flex flex-wrap gap-2">
+              <div *ngFor="let art of articulosBusqueda; let i = index" class="border rounded p-1 d-flex align-items-center bg-light" style="min-width:0;max-width:220px;" [attr.id]="i === 0 ? 'primer-articulo-busqueda' : null">
+                <ng-container *ngIf="permisosService.tienePermiso('categorias_relacionar')">
+                  <input type="checkbox" class="form-check-input me-2" style="width:1.1em;height:1.1em;" [checked]="busquedaSeleccionados.has(art.id)" (change)="toggleSeleccionBusqueda(art.id)">
+                </ng-container>
+                <span class="fw-normal small">{{ art.nombre }}</span>
+                <button *ngIf="permisosService.tienePermiso('categorias_relacionar')" mat-icon-button class="ms-2 p-0" style="min-width:24px;width:24px;height:24px;line-height:1;" (click)="onAsociarArticulo(art)">
+                  <i class="bi bi-plus" style="color:#28a745;font-size:1.2em;"></i>
+                </button>
+              </div>
+            </div>
+            <div *ngIf="articulosBusqueda.length === 0" class="text-muted small">No hay resultados.</div>
+          </div>
+          <app-articulos-en-categoria #artCatComp [categoriaId]="categoriaSeleccionada.id"></app-articulos-en-categoria>
+        </mat-card>
+      </div>
+    </div>
+
+    <!-- Modal para nueva categoría raíz -->
+    <ng-template #modalNuevaCategoria>
+      <h2 mat-dialog-title>Nueva categoría raíz</h2>
+      <mat-dialog-content>
+        <app-categoria-form
+          [categoria]="{ nombre: '', descripcion: '', imagen: '', parentId: null }"
+          (guardar)="onGuardarCategoria($event); cerrarModalNuevaCategoria()"
+          (cancelar)="cerrarModalNuevaCategoria()">
+        </app-categoria-form>
+      </mat-dialog-content>
+    </ng-template>
+
+  <app-confirm-dialog
+    modalId="deleteCategoriaModal"
+    title="Eliminar categoría"
+    message="¿Seguro que deseas eliminar esta categoría?"
+    confirmText="Sí, eliminar"
+    cancelText="Cancelar"
+    (confirmed)="onEliminarCategoriaConfirmed()"
+    (cancelled)="onEliminarCategoriaCancelled()">
+  </app-confirm-dialog>
+  </div>
+</div>

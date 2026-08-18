@@ -1,0 +1,39 @@
+:host ::ng-deep .bg-orange {
+  background-color: #ff9800 !important;
+  color: #fff !important;
+}
+.modal-xl { max-width: 900px; }
+:host ::ng-deep .modal {
+  z-index: 1051 !important;
+}
+
+.mis-compras-items-title {
+  font-size: 0.82rem;
+}
+
+.mis-compras-items-wrapper {
+  width: 100%;
+}
+
+.mis-compras-items-table {
+  font-size: 0.78rem;
+}
+
+.mis-compras-items-table thead th,
+.mis-compras-items-table tbody td {
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+}
+
+.mis-compras-items-table tfoot td {
+  padding-top: 0.45rem;
+  padding-bottom: 0.45rem;
+  font-size: 0.9rem;
+}
+
+.mis-compras-items-wrapper-scroll {
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.25rem;
+}

@@ -1,0 +1,80 @@
+<div class="container py-4">
+	<ng-container *ngIf="loading">
+		<div class="global-loading-overlay" aria-live="polite" aria-busy="true">
+			<div class="global-loading-spinner">
+				<div class="spinner-border text-primary" role="status" aria-label="Cargando"></div>
+				<div class="global-loading-message">Cargando productos...</div>
+			</div>
+		</div>
+	</ng-container>
+	
+	
+	   <div class="row g-4 filtros-layout" [class.filtros-plegados]="filtrosColapsados">
+		   <!-- Panel de filtros visible solo si !filtrosColapsados -->
+		   <aside *ngIf="!filtrosColapsados" class="col-12 col-md-3 mb-3 mb-md-0 filtros-aside">
+			   <app-filtros-panel
+				   [filtroNombre]="filtroNombre"
+				   [precioMinFiltro]="precioMinFiltro"
+				   [precioMaxFiltro]="precioMaxFiltro"
+				   [marcasDisponibles]="marcasDisponibles"
+				   [marcasSeleccionadas]="marcasSeleccionadas"
+				   [filtrosColapsados]="filtrosColapsados"
+				   [hayFiltrosActivos]="hayFiltrosActivos"
+				   (filtroNombreChange)="filtroNombre = $event; aplicarFiltro()"
+				   (precioMinFiltroChange)="precioMinFiltro = $event; aplicarFiltro()"
+				   (precioMaxFiltroChange)="precioMaxFiltro = $event; aplicarFiltro()"
+				   (marcasSeleccionadasChange)="marcasSeleccionadas = $event; aplicarFiltro()"
+				   (limpiarFiltros)="limpiarFiltros()"
+				   (toggleFiltrosColapsados)="toggleFiltrosColapsados()"
+			   />
+		   </aside>
+
+		   <!-- Botón flotante eliminado, solo queda el botón en la barra superior -->
+		   <div class="col-12" [ngClass]="{'col-md-9': !filtrosColapsados}">
+			<div class="d-flex justify-content-between align-items-center mb-3">
+				<div class="btn-group" role="group" aria-label="Selector de vista">
+					<button type="button" class="btn btn-outline-secondary" [class.active]="modoVista === 'grande'" (click)="setModoVista('grande')" title="Vista grande">
+						<i class="bi bi-grid-3x3-gap-fill"></i>
+					</button>
+					<button type="button" class="btn btn-outline-secondary" [class.active]="modoVista === 'compacta'" (click)="setModoVista('compacta')" title="Vista compacta">
+						<i class="bi bi-grid-1x2"></i>
+					</button>
+					<button type="button" class="btn btn-outline-secondary" [class.active]="modoVista === 'lista'" (click)="setModoVista('lista')" title="Vista lista">
+						<i class="bi bi-list"></i>
+					</button>
+				</div>
+				   <button *ngIf="filtrosColapsados" class="btn btn-outline-primary btn-sm ms-2" type="button" (click)="toggleFiltrosColapsados()">
+					   <i class="bi bi-funnel"></i> Filtros
+				   </button>
+			</div>
+			<div class="row g-4">
+				   <ng-container *ngFor="let producto of productosFiltrados">
+									<div class="col-12 col-md-6 col-lg-3" *ngIf="modoVista === 'grande'">
+													 <app-producto-item
+														 [producto]="producto"
+														 [favoritos]="favoritos"
+														 [ratings]="ratings"
+														 (agregarCarrito)="agregarAlCarrito(producto)"
+														 (toggleFavorito)="toggleFavorito($event)">
+													 </app-producto-item>
+											 </div>
+										<div class="col-12 col-sm-6 col-md-4 col-lg-3" *ngIf="modoVista === 'compacta'">
+												<app-producto-item-mini
+													[producto]="producto"
+													[favoritos]="favoritos"
+													[ratings]="ratings"
+													(agregar)="agregarAlCarrito(producto)"
+													(toggleFavorito)="toggleFavorito($event)">
+												</app-producto-item-mini>
+										</div>
+					<div class="col-12 mb-2" *ngIf="modoVista === 'lista'">
+						<app-producto-item-lista [producto]="producto" (agregar)="agregarAlCarrito(producto)" [modo]="modoVista"></app-producto-item-lista>
+					</div>
+				</ng-container>
+			</div>
+			<div *ngIf="productosFiltrados.length === 0" class="text-center text-muted mt-5">
+				No se encontraron productos.
+			</div>
+		</div>
+	</div>
+</div>

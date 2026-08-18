@@ -1,0 +1,48 @@
+<!-- Modal de detalle de producto (reutilizado) -->
+<app-producto-detalle-modal
+  *ngIf="selectedProducto"
+  [selectedProducto]="selectedProducto"
+  [mainImageUrl]="selectedImagenModal"
+  [galeriaModal]="getGaleriaModal(selectedProducto)"
+  [productosRelacionados]="productosRelacionadosModal"
+  [cantidadAgregar]="cantidadAgregar"
+  (cerrar)="cerrarDetalleProducto()"
+  (agregarPrincipal)="agregarAlCarritoDesdeModal()"
+  (seleccionarImagen)="seleccionarImagenModal($event)"
+  (agregarRelacionado)="agregarRelacionadoDesdeModal($event)"
+  (cantidadAgregarChange)="cantidadAgregar = $event"
+  [errorCarrito]="errorCarrito"
+></app-producto-detalle-modal>
+
+<section class="container py-4 favoritos-page">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h2 class="mb-0 fw-bold">Mis favoritos</h2>
+  </div>
+
+
+  <div *ngIf="loading" class="text-center my-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+  <div *ngIf="!loading && !error && !favoritos.length" class="alert alert-info mb-0">
+    No tenés productos favoritos por ahora.
+  </div>
+
+  <div class="row g-4" *ngIf="!loading && !error && favoritos.length">
+    <div class="col-12 col-sm-6 col-lg-4" *ngFor="let favorito of favoritos">
+      <app-favorito-item
+        [producto]="favorito.producto"
+        [ratings]="ratings"
+        [ratingGlobal]="ratingsGlobal[favorito.producto.id]"
+        (setRating)="setRating($event.producto, $event.rating, $event.event)"
+        (toggleFavorito)="quitarFavorito({producto: favorito.producto}, $event.event)"
+        (cardClick)="abrirDetalleProducto(favorito.producto, $event)"
+        (agregarCarrito)="abrirDetalleProducto(favorito.producto)"
+      ></app-favorito-item>
+    </div>
+  </div>
+</section>

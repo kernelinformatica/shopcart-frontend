@@ -1,0 +1,94 @@
+// Vista lista tipo renglón horizontal, bien alineada y espaciosa
+.producto-lista-card.renglon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem;
+  min-height: 120px;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto 8px auto;
+  padding: 1.2rem 2rem;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  transition: background 0.2s;
+  &:hover {
+    background: #f8f9fa;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+}
+.producto-lista-img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border: 1px solid #eee;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.producto-lista-thumb-frame {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.producto-lista-media-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.producto-lista-media-frame {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0.35rem;
+}
+
+.producto-lista-media-frame-lg {
+  height: 180px;
+}
+
+.producto-lista-media-frame-sm {
+  height: 80px;
+}
+
+.producto-lista-media-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  cursor: pointer;
+}
+.producto-lista-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0%;
+  min-width: 0;
+  overflow: hidden;
+}
+.producto-lista-titulo {
+  .producto-lista-card {
+    min-width: 100%;
+    background: #fff;
+    transition: box-shadow 0.2s;
+    cursor: pointer;
+    &:hover {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+  }
+  .producto-lista-img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    border: 1px solid #eee;
+  }
+  white-space: normal;
+}

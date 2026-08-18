@@ -1,0 +1,108 @@
+<ul class="categoria-arbol-list">
+  <li *ngFor="let cat of getHijos()" [ngStyle]="{'--nivel': nivel}">
+    <div class="d-flex align-items-center gap-2">
+      <ng-container *ngIf="getCantidadHijos(cat) > 0">
+        <button class="btn btn-sm btn-light px-1 py-0 plegar-btn" (click)="togglePlegada(cat)" [attr.aria-label]="isPlegada(cat) ? 'Desplegar' : 'Plegar'">
+          <i class="bi" [ngClass]="isPlegada(cat) ? 'bi-chevron-right' : 'bi-chevron-down'"></i>
+        </button>
+      </ng-container>
+      <span (click)="onSeleccionar(cat)" class="categoria-nombre"
+        [attr.id]="selectedId === cat.id ? 'categoria-arbol-item-' + cat.id : null"
+        [ngClass]="{
+          'categoria-nombre-raiz': !parent,
+          'categoria-nombre-hijo': parent,
+          'categoria-seleccionada': selectedId === cat.id,
+          'categoria-nombre-subnivel': parent && selectedId !== cat.id,
+          'categoria-nombre-n2': nivel >= 2,
+          'categoria-nombre-n3': nivel >= 3,
+          'categoria-nombre-n4': nivel >= 4
+        }"
+        [style.paddingLeft]="(nivel-1)*16 + 5 + 'px'">
+        <ng-container *ngIf="getCantidadHijos(cat) > 0">
+          <button class="plegar-todo-icon-btn me-1" title="Plegar/desplegar todo este nivel" (click)="togglePlegadoMasivo(cat, $event)">
+            <i class="bi" [ngClass]="isSubarbolMayormentePlegado(cat) ? 'bi-layers-half' : 'bi-layers'"></i>
+          </button>
+        </ng-container>
+        
+        <ng-container *ngIf="!tieneHijos(cat)">
+          <i class="bi bi-tag text-info me-1"></i>
+        </ng-container>
+      <!-- {{ cat.orden }} - -->{{ cat.nombre }}
+        <span *ngIf="getCantidadHijos(cat) > 0" class="text-secondary small ms-1">[{{ getCantidadHijos(cat) }}]</span>
+      </span>
+     
+      <span class="orden-btn-group">
+        <button class="icon-btn icon-btn-dark ordenar" (click)="onMoverArriba(cat)" title="Subir"><i class="bi bi-chevron-up"></i></button>
+        <button class="icon-btn icon-btn-dark ordenar" (click)="onMoverAbajo(cat)" title="Bajar"><i class="bi bi-chevron-down"></i></button>
+      </span>
+      <button *ngIf="tienePermiso('categorias_crear')" class="icon-btn icon-btn-success" (click)="onAgregarSub(cat)" title="Agregar subcategoría"><i class="bi bi-plus"></i></button>
+      <button *ngIf="tienePermiso('categorias_editar')" class="icon-btn icon-btn-primary" (click)="onEditar(cat)" title="Editar"><i class="bi bi-pencil"></i></button>
+      <button *ngIf="tienePermiso('categorias_borrar')" class="icon-btn icon-btn-danger" (click)="onEliminar(cat)" title="Eliminar"><i class="bi bi-trash"></i></button>
+    </div>
+    <!-- Formulario inline para nueva subcategoría -->
+    <div *ngIf="subFormOpen[cat.id]" class="ms-4 my-1 p-1 bg-light rounded border">
+      <form (ngSubmit)="onGuardarSub(cat)" class="row gx-1 gy-1 align-items-center">
+        <div class="col-auto">
+          <input type="text" class="form-control form-control-sm" style="max-width:110px;" placeholder="Nombre" [(ngModel)]="subFormNombre[cat.id]" name="nombre-{{cat.id}}" required autocomplete="off" />
+        </div>
+        <div class="col-auto">
+          <input type="text" class="form-control form-control-sm" style="max-width:180px;min-width:120px;" placeholder="Descripción" [(ngModel)]="subFormDescripcion[cat.id]" name="descripcion-{{cat.id}}" autocomplete="off" />
+        </div>
+        <div class="col-auto">
+          <input type="number" class="form-control form-control-sm" style="max-width:80px;" placeholder="Orden" [(ngModel)]="subFormOrden[cat.id]" name="orden-{{cat.id}}" autocomplete="off" min="1" step="1" />
+        </div>
+        <div class="col-auto">
+          <input type="number" class="form-control form-control-sm" style="max-width:110px;" placeholder="Cod. Interno" [(ngModel)]="subFormCodInterno[cat.id]" name="codinterno-{{cat.id}}" autocomplete="off" min="0" step="1" />
+        </div>
+        <div class="col-auto flex-grow-1" style="min-width:200px;">
+          <input type="text" class="form-control form-control-sm" style="width:100%;max-width:1000px;min-width:200px;" placeholder="URL Imagen" [(ngModel)]="subFormImagen[cat.id]" name="sub-imagen-{{cat.id}}" autocomplete="off" />
+        </div>
+        <div class="col-auto">
+          <button type="submit" class="btn btn-success btn-sm px-2"><i class="bi bi-check"></i></button>
+        </div>
+        <div class="col-auto">
+          <button type="button" class="btn btn-secondary btn-sm px-2" (click)="onCancelarSub(cat)"><i class="bi bi-x"></i></button>
+        </div>
+      </form>
+    </div>
+    <!-- Formulario inline para edición -->
+    <div *ngIf="editFormOpen[cat.id]" class="ms-4 my-1 p-1 bg-light rounded border">
+      <form (ngSubmit)="onGuardarEdit(cat)" class="row gx-1 gy-1 align-items-center">
+        <div class="col-auto">
+          <input type="text" class="form-control form-control-sm" style="max-width:110px;" placeholder="Nombre" [(ngModel)]="editFormNombre[cat.id]" name="edit-nombre-{{cat.id}}" required autocomplete="off" />
+        </div>
+        <div class="col-auto">
+          <input type="text" class="form-control form-control-sm" style="max-width:110px;" placeholder="Descripción" [(ngModel)]="editFormDescripcion[cat.id]" name="edit-descripcion-{{cat.id}}" autocomplete="off" />
+        </div>
+        <div class="col-auto">
+          <input type="number" class="form-control form-control-sm" style="max-width:110px;" placeholder="Cod. Interno" [(ngModel)]="editFormCodInterno[cat.id]" name="edit-codinterno-{{cat.id}}" autocomplete="off" min="0" step="1" />
+        </div>
+        <div class="col-12 mt-1">
+          <input type="text" class="form-control form-control-sm" placeholder="URL Imagen" [(ngModel)]="editFormImagen[cat.id]" name="edit-imagen-{{cat.id}}" autocomplete="off" />
+        </div>
+        <div class="col-12 mt-1">
+          <input type="text" class="form-control form-control-sm" placeholder="URL" [(ngModel)]="editFormUrl[cat.id]" name="edit-url-{{cat.id}}" autocomplete="off" />
+        </div>
+        <div class="col-auto">
+          <button type="submit" class="btn btn-success btn-sm px-2"><i class="bi bi-check"></i></button>
+        </div>
+        <div class="col-auto">
+          <button type="button" class="btn btn-secondary btn-sm px-2" (click)="onCancelarEdit(cat)"><i class="bi bi-x"></i></button>
+        </div>
+      </form>
+    </div>
+    <app-categoria-arbol *ngIf="getCantidadHijos(cat) > 0 && !isPlegada(cat)"
+      [categorias]="categorias"
+      [parentId]="cat.id"
+      [parent]="true"
+      [plegadas]="plegadas"
+      [nivel]="(nivel || 1) + 1"
+      (plegadasChange)="onPlegadasChange($event)"
+      (seleccionar)="seleccionar.emit($event)"
+      (agregarSub)="agregarSub.emit($event)"
+      (editar)="editarInline.emit($event)"
+      (editarInline)="editarInline.emit($event)"
+      (eliminar)="eliminar.emit($event)"
+      (actualizarOrden)="actualizarOrden.emit($event)"></app-categoria-arbol>
+  </li>
+</ul>

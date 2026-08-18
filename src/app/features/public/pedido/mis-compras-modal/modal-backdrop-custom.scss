@@ -1,0 +1,13 @@
+.modal-backdrop-custom {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: transparent !important; /* Sin opacidad */
+  z-index: 1040;
+  pointer-events: none !important;
+}
+.modal-xl {
+  z-index: 1052 !important;
+}

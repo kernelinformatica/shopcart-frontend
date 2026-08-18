@@ -1,0 +1,54 @@
+(empty)
+
+// --- Unificación visual con catálogo de productos ---
+.catalogo-section {
+	margin-top: 2rem;
+}
+
+.productocategoria-toolbar {
+	background: #fff;
+	border-radius: 0.75rem;
+	padding: 1rem 1.25rem;
+	box-shadow: 0 2px 12px rgba(33, 37, 41, 0.06);
+}
+
+
+.categoria-list-group {
+	margin-top: 1.5rem;
+	background: #fff;
+	border-radius: 1.25rem;
+	box-shadow: 0 2px 12px rgba(33, 37, 41, 0.06);
+	padding: 0;
+	text-align: left;
+}
+
+.categoria-list-item {
+	font-size: 1.18rem;
+	border: none;
+	border-bottom: 1px solid #f0f0f0;
+	background: transparent;
+	transition: background 0.15s;
+	cursor: pointer;
+	&:hover {
+		background: #f8f9fa;
+	}
+	text-align: left;
+}
+
+.categoria-list-item:last-child {
+	border-bottom: none;
+}
+
+.list-group-item .cantidad-productos {
+	color: #fff;
+	background: #198754;
+	font-size: 0.92em;
+	font-weight: 600;
+	margin-left: 0.4em;
+	border-radius: 1em;
+	padding: 0.08em 0.65em;
+	letter-spacing: 0.01em;
+	display: inline-block;
+	vertical-align: middle;
+	box-shadow: 0 1px 4px #0002;
+}

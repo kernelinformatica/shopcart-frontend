@@ -1,0 +1,153 @@
+
+.producto-card {
+  // Puedes copiar estilos base de dashboard o sobrescribir aquí
+}
+.producto-card {
+  position: relative;
+}
+
+.producto-card-media {
+  position: relative;
+}
+
+.producto-card-media-frame {
+  height: 210px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0.6rem;
+  background: #fff;
+}
+
+.producto-oferta-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.cuotas-box {
+  background: #eafbe7;
+  border: 1.5px solid #7ed957;
+  font-size: 0.8em;
+  border-radius: 0.55em;
+  transition: box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(40,167,69,0.18);
+  margin-bottom: 0.25em;
+}
+
+.related-products-block {
+  padding: 0.15rem 0 0.25rem;
+}
+
+.related-products-title {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.related-products-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.2rem;
+  scrollbar-width: thin;
+}
+
+.related-products-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.related-products-scroll::-webkit-scrollbar-thumb {
+  background: rgba(31, 41, 55, 0.28);
+  border-radius: 999px;
+}
+
+.related-product-pill {
+  flex: 0 0 auto;
+  min-width: 50px;
+  max-width: 50px;
+  border: 0px solid #dbe2ea;
+  background: #fff;
+  //border-radius: 0.9rem;
+  padding-left: 5px;
+
+  //padding: 0.45rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  //gap: 0.4rem;
+  //box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  //transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.related-product-pill:hover {
+  transform: translateY(-1px);
+  border-color: #86c5ff;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+}
+
+.related-product-thumb {
+  width: 100%;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 0.7rem;
+  background: #f8fafc;
+}
+
+.related-product-name {
+  width: 100%;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #334155;
+  text-align: center;
+}
+  
+.producto-card-bottom {
+  padding: 0.75rem 1rem 1rem 1rem;
+}
+
+.producto-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.producto-action-button:hover {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.marca-overlay {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  font-size: 1.15em;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: rgba(255,255,255,0.92);
+}
+.marca-logo-badge {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  margin-right: 0.25rem;
+  background: #fff;
+  border-radius: 50%;
+  border: 1px solid #eee;
+}
+
+.sin-stock-price {
+  text-decoration: line-through;
+  color: #b02a37 !important;
+  opacity: 0.75;
+}
+
+@media (max-width: 575.98px) {
+  .producto-card-media-frame {
+    height: 180px;
+  }
+}

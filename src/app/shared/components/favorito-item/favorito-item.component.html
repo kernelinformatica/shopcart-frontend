@@ -1,0 +1,80 @@
+<div class="card h-100 shadow-sm producto-card" [ngClass]="{ 'producto-card-sin-imagen': !tieneImagenProducto(producto) }" (click)="onCardClick($event, producto)">
+  <img
+    *ngIf="tieneImagenProducto(producto)"
+    [src]="getProductoImagen(producto)"
+    class="card-img-top producto-oferta-img"
+    [alt]="producto.nombre"
+    (error)="onProductoImageError(producto, $event)"
+  >
+  <div class="marca-overlay" *ngIf="getMarcaNombre(producto)">
+    <span class="badge bg-light text-dark d-inline-flex align-items-center gap-1">
+      <img
+        *ngIf="getMarcaLogoPath(producto)"
+        [src]="getMarcaLogoPath(producto)"
+        [alt]="getMarcaNombre(producto)"
+        class="marca-logo-badge"
+        (error)="onMarcaLogoError(producto, $event)"
+      >
+      <span *ngIf="!getMarcaLogoPath(producto)">Marca: {{ getMarcaNombre(producto) }}</span>
+    </span>
+  </div>
+  <div class="card-body d-flex flex-column">
+    <h5 class="card-title mb-1">{{ producto.nombre }}</h5>
+    <p class="card-text">{{ producto.descripcion }}</p>
+    <div class="mb-2">
+      <!-- Mostrar precio con descuento/promoción si corresponde -->
+      <ng-container *ngIf="producto.precio_descuento != null && producto.precio != null && producto.precio_descuento < producto.precio">
+        <span class="fw-bold text-primary fs-3">${{ producto.precio_descuento | number:'1.2-2' }}</span>
+        <span class="text-muted text-decoration-line-through ms-2 fs-6">${{ producto.precio | number:'1.2-2' }}</span>
+        <span class="badge bg-success ms-2">¡Promo!</span>
+      </ng-container>
+      <ng-container *ngIf="!(producto.precio_descuento != null && producto.precio != null && producto.precio_descuento < producto.precio)">
+        <span *ngIf="getPrecioFavorito(producto) !== null" class="fw-bold text-primary fs-3">
+          ${{ getPrecioFavorito(producto) | number:'1.2-2' }}
+        </span>
+        <span *ngIf="getPrecioFavorito(producto) === null" class="text-danger small">Precio no disponible</span>
+      </ng-container>
+      <span *ngIf="producto.listaPrecio" class="badge bg-warning text-dark ms-2">{{ producto.listaPrecio.nombre }}</span>
+    </div>
+    <div class="mb-2" *ngIf="producto.promociones && producto.promociones.length">
+      <span *ngFor="let promo of producto.promociones" class="badge bg-danger me-1">
+        {{ promo.nombre }} <span *ngIf="promo.tipo === 'porcentaje'">({{ promo.valor }}%)</span>
+        <span *ngIf="promo.tipo === 'monto'">(${{ promo.valor }})</span>
+      </span>
+    </div>
+    <div class="mb-2" *ngIf="(ratingGlobal ?? producto.rating?.global) > 0">
+      <span class="text-secondary small me-2">Calificación global</span>
+      <i class="bi bi-people me-1"></i>
+      <ng-container *ngFor="let star of [1,2,3,4,5]">
+        <i class="bi me-1"
+          [ngClass]="(ratingGlobal ?? producto.rating?.global) >= star ? 'bi-star-fill text-warning' : 'bi-star text-secondary opacity-50'"
+          style="font-size: 0.95em; cursor:default"></i>
+      </ng-container>
+      <span class="fw-bold ms-1">{{ (ratingGlobal ?? producto.rating?.global) | number:'1.1-2' }}</span>
+    </div>
+    <div class="mb-2">
+      <div class="d-flex align-items-center gap-1">
+        <ng-container *ngFor="let star of [1,2,3,4,5]">
+          <i class="bi"
+            [ngClass]="producto.rating?.usuario >= star ? 'bi-star-fill text-primary' : 'bi-star text-secondary opacity-50'"
+            class="fs-6"
+            (click)="onSetRating(producto, star, $event)"
+            style="cursor:pointer"></i>
+        </ng-container>
+        <span class="ms-2 text-muted small">Tu rating</span>
+      </div>
+    </div>
+    <div class="d-flex align-items-center mt-auto gap-2 justify-content-end w-100">
+      <button class="p-0 border-0 bg-transparent shadow-none" style="cursor:pointer"
+        title="Quitar de favoritos" (click)="onToggleFavorito($event, producto)">
+        <i class="bi bi-heartbreak-fill text-danger fs-4"></i>
+      </button>
+      <button class="p-0 border-0 bg-transparent shadow-none" style="cursor:pointer"
+        [title]="!productoTieneImpuestos(producto) ? 'Este producto no tiene impuestos cargados' : 'Agregar al carrito'"
+        (click)="onAgregarCarrito($event, producto)"
+        [disabled]="!productoTieneImpuestos(producto)">
+        <i class="bi bi-cart-plus fs-4" [ngClass]="!productoTieneImpuestos(producto) ? 'text-muted' : 'text-primary'"></i>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,159 @@
+<section class="ofertas-page catalogo-section container mb-5">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+    <h2 class="mb-0 fw-bold module-title text-dark">
+      <i class="bi bi-lightning-charge-fill me-2"></i>Productos en oferta
+    </h2>
+  </div>
+
+  <div *ngIf="loading" class="text-center my-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+  <div *ngIf="!loading && !error && !productosEnOferta.length" class="alert alert-info">
+    No hay productos en oferta en este momento.
+  </div>
+
+  <div class="row g-4 filtros-layout" [class.filtros-plegados]="filtrosColapsados" *ngIf="!loading && !error && productosEnOferta.length">
+    <aside class="col-12 col-lg-3 filtros-aside" [class.filtros-aside-plegado]="filtrosColapsados">
+      <div class="card shadow-sm filtros-card" [class.filtros-card-plegado]="filtrosColapsados">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h3 class="h6 mb-0 fw-bold">Filtros</h3>
+            <div class="d-flex align-items-center gap-2">
+              <button class="btn btn-link btn-sm p-0" type="button" (click)="limpiarFiltros()" [disabled]="!hayFiltrosActivos" title="Limpiar filtros" aria-label="Limpiar filtros">
+                <i class="bi bi-arrow-clockwise"></i>
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" type="button" (click)="toggleFiltrosColapsados()" title="Plegar filtros" aria-label="Plegar filtros">
+                <i class="bi bi-chevron-bar-left"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold mb-1">Precio mínimo</label>
+            <input
+              type="number"
+              class="form-control"
+              min="0"
+              [value]="precioMinFiltro ?? ''"
+              (input)="actualizarPrecioMin($event)"
+              placeholder="Ej: 1000"
+            >
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold mb-1">Precio máximo</label>
+            <input
+              type="number"
+              class="form-control"
+              min="0"
+              [value]="precioMaxFiltro ?? ''"
+              (input)="actualizarPrecioMax($event)"
+              placeholder="Ej: 5000"
+            >
+          </div>
+
+          <div class="mb-3" *ngIf="marcasDisponibles.length">
+            <div class="fw-semibold mb-2">Marcas</div>
+            <div class="filtro-lista">
+              <div class="form-check" *ngFor="let marca of marcasDisponibles">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  [id]="'marca-' + marca"
+                  [checked]="marcasSeleccionadas[marca]"
+                  (change)="toggleMarca(marca, $any($event.target).checked)"
+                >
+                <label class="form-check-label" [for]="'marca-' + marca">{{ marca }}</label>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="rubrosDisponibles.length">
+            <div class="fw-semibold mb-2">Rubros</div>
+            <div class="filtro-lista">
+              <div class="form-check" *ngFor="let rubro of rubrosDisponibles">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  [id]="'rubro-' + rubro"
+                  [checked]="rubrosSeleccionados[rubro]"
+                  (change)="toggleRubro(rubro, $any($event.target).checked)"
+                >
+                <label class="form-check-label" [for]="'rubro-' + rubro">{{ rubro }}</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="col-12 col-lg-9" [class.col-lg-12]="filtrosColapsados">
+      <div class="mb-3" *ngIf="filtrosColapsados">
+        <button class="btn btn-outline-secondary btn-sm" type="button" (click)="toggleFiltrosColapsados()">
+          <i class="bi bi-chevron-right me-1"></i> Mostrar filtros
+        </button>
+      </div>
+
+      <div *ngIf="!productosFiltradosEnOferta.length" class="alert alert-info mb-0">
+        No hay productos en oferta que coincidan con los filtros seleccionados.
+      </div>
+
+      <div class="mb-3 d-flex justify-content-end">
+        <app-producto-vista-selector
+          [modoVista]="modoVistaProducto"
+          (modoVistaChange)="setModoVistaProducto($event)">
+        </app-producto-vista-selector>
+      </div>
+      <div class="row g-4" *ngIf="productosFiltradosEnOferta.length">
+        <div class="col-12 col-sm-6 col-xl-4" *ngFor="let producto of productosFiltradosEnOferta; trackBy: trackByProductoId">
+          <ng-container [ngSwitch]="modoVistaProducto">
+            <app-producto-item
+              *ngSwitchCase="'grande'"
+              [producto]="producto"
+              [favoritos]="favoritos"
+              [ratings]="ratings"
+              (toggleFavorito)="toggleFavorito($event.producto, $event.event)"
+              (agregarCarrito)="abrirDetalleProducto($event)"
+              (setRating)="setRating($event.producto, $event.rating, $event.event)"
+            ></app-producto-item>
+            <app-producto-item-mini
+              *ngSwitchCase="'compacta'"
+              [producto]="producto"
+              [favoritos]="favoritos"
+              [ratings]="ratings"
+              [ratingsGlobal]="ratingsGlobal"
+              [setRating]="setRatingMini"
+              (toggleFavorito)="toggleFavorito($event.producto, $event.event)"
+              (agregar)="abrirDetalleProducto($event)"
+            ></app-producto-item-mini>
+            <app-producto-item-lista
+              *ngSwitchCase="'lista'"
+              [producto]="producto"
+              (agregar)="abrirDetalleProducto($event)"
+            ></app-producto-item-lista>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <app-producto-detalle-modal
+    [selectedProducto]="selectedProducto"
+    [mainImageUrl]="getImagenPrincipalModal(selectedProducto)"
+    [galeriaModal]="getGaleriaModal(selectedProducto)"
+    [productosRelacionados]="productosRelacionadosModal"
+    [cantidadAgregar]="cantidadAgregar"
+    [errorCarrito]="errorCarrito"
+    (cantidadAgregarChange)="cantidadAgregar = $event"
+    (seleccionarImagen)="seleccionarImagenModal($event)"
+    (seleccionarRelacionado)="seleccionarProductoRelacionado($event)"
+    (agregarRelacionado)="agregarRelacionadoDesdeModal($event)"
+    (agregarPrincipal)="agregarAlCarritoDesdeModal()"
+    (cerrar)="cerrarDetalleProducto()"
+  ></app-producto-detalle-modal>
+</section>

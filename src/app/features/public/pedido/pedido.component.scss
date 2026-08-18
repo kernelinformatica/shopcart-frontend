@@ -1,0 +1,13 @@
+// Hace el widget de Mercado Pago más pequeño y flotante
+.mp-float-widget {
+	position: fixed;
+	top: 60px;
+	right: 40px;
+	width: 370px;
+	max-width: 95vw;
+	z-index: 1050;
+	background: #fff;
+	border-radius: 12px;
+	box-shadow: 0 2px 16px #0002;
+	padding: 12px 8px 8px 8px;
+}

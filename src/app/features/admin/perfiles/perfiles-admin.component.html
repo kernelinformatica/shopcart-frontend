@@ -1,0 +1,195 @@
+<section class="container py-3 perfiles-form">
+  <div *ngIf="guardandoPermisos || quitandoPermisos" class="listado-loading-overlay" aria-live="polite" aria-busy="true">
+    <div class="listado-loading-box">
+      <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+      <div class="listado-loading-message">Realizando cambios...</div>
+    </div>
+  </div>
+
+  <div *ngIf="cargando" class="listado-loading-overlay" aria-live="polite" aria-busy="true">
+    <div class="listado-loading-box">
+      <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+      <div class="listado-loading-message">Cargando perfiles...</div>
+    </div>
+  </div>
+
+  <div class="hero-panel mb-4">
+    <div>
+      <p class="eyebrow mb-2">Gestión de perfiles</p>
+      <h2 class="mb-2">
+        <i class="bi bi-person-badge-fill"></i>
+        Permisos / Roles / Perfiles
+      </h2>
+      <p class="text-muted mb-0">
+        Administración centralizada de perfiles y permisos heredados por app.
+      </p>
+    </div>
+    <div class="hero-actions">
+      <button class="icon-action-btn icon-action-btn-light" type="button" routerLink="/admin/usuarios" title="Volver a usuarios">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+        <span class="visually-hidden">Volver</span>
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger d-flex align-items-center gap-2 mb-3">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span>{{ error }}</span>
+  </div>
+  <div *ngIf="mensaje" class="alert alert-success d-flex align-items-center gap-2 mb-3">
+    <i class="bi bi-check-circle-fill"></i>
+    <span>{{ mensaje }}</span>
+  </div>
+<div>{{ puedeAgregarQuitarPerfiles }}</div>
+  <div class="row g-4" *ngIf="!cargando">
+    <div class="col-12">
+      <div class="form-section-card h-100">
+        <div class="form-section-header form-section-header-collapsible">
+          <i class="bi bi-person-badge-fill"></i>
+          <div>
+            <h5 class="mb-0">Perfil y app activos</h5>
+            <small class="text-muted">Elegí el rol y la app para revisar permisos.</small>
+          </div>
+          <button type="button" class="section-toggle-btn ms-auto" (click)="toggleSeccion('perfil')" [attr.aria-expanded]="seccionesAbiertas.perfil" aria-label="Plegar o desplegar Perfil y app activos">
+            <i class="bi bi" [ngClass]="seccionesAbiertas.perfil ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+          </button>
+        </div>
+        <div class="form-section-body" *ngIf="seccionesAbiertas.perfil">
+          <div class="row g-4">
+            <div class="col-12 col-lg-6 border-end-lg pe-lg-4">
+              
+              <div class="fw-semibold text-dark mb-3">Rol / Perfil</div>
+              <select class="form-select" [(ngModel)]="rolIdSeleccionado" (ngModelChange)="onPerfilChange($event)" name="rolIdSeleccionado">
+                <option [ngValue]="null">Seleccionar rol</option>
+                <option *ngFor="let rol of roles" [ngValue]="rol.id">{{ rol.nombre }}</option>
+              </select>
+
+              <div class="mt-3">
+                <div class="field-hint text-uppercase mb-1">Perfil seleccionado</div>
+                <div class="fw-semibold text-dark">{{ getRolSeleccionadoTexto() }}</div>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-6 ps-lg-4">
+              <div class="fw-semibold text-dark mb-3">{{ getEmpresaDeAppSeleccionadaTexto() }}</div>
+
+              <select class="form-select" [(ngModel)]="appIdSeleccionada" (ngModelChange)="onAppChange($event)" name="appIdSeleccionada" [disabled]="!apps.length">
+                <option [ngValue]="null">Seleccionar app</option>
+                <option *ngFor="let app of apps" [ngValue]="app.id">{{ app.nombre }} - {{ app.empresa?.nombre || 'Sin empresa' }}</option>
+              </select>
+
+              <div class="mt-3">
+                <div class="field-hint text-uppercase mb-1">App seleccionada</div>
+                <div class="fw-semibold text-dark">{{ getAppSeleccionadaTexto() }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="form-section-card">
+        <div class="form-section-header form-section-header-collapsible">
+          <i class="bi bi-key-fill"></i>
+          <div>
+            <h5 class="mb-0">Catálogo de permisos</h5>
+            <small class="text-muted">Buscá, seleccioná y aplicá permisos al perfil.</small>
+          </div>
+          <button type="button" class="section-toggle-btn ms-auto" (click)="toggleSeccion('catalogo')" [attr.aria-expanded]="seccionesAbiertas.catalogo" aria-label="Plegar o desplegar Catálogo de permisos">
+            <i class="bi bi" [ngClass]="seccionesAbiertas.catalogo ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+          </button>
+        </div>
+        <div class="form-section-body" *ngIf="seccionesAbiertas.catalogo">
+          <div class="row g-3 align-items-end mb-3">
+            <div class="col-12 col-md-6">
+              <label class="form-label">Buscar en catálogo</label>
+              <input class="form-control" type="search" [(ngModel)]="busqueda" name="busqueda" placeholder="Nombre, alias, módulo..." />
+              <div class="field-hint mt-2">Buscá permisos del catálogo para asignar o quitar.</div>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <div class="text-muted small">Seleccionados: {{ getTotalSeleccionados() }} de {{ permisosCatalogo.length }}</div>
+            <div class="d-flex gap-2 flex-wrap">
+              <button type="button" class="icon-action-btn icon-action-btn-sm icon-action-btn-light" (click)="cargarPermisos()" [disabled]="cargandoPermisos" title="Cargar permisos" aria-label="Cargar permisos">
+                <span *ngIf="cargandoPermisos" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+                <span class="visually-hidden">Cargar permisos</span>
+              </button>
+              <button *ngIf="puedeAgregarQuitarPerfiles == true" type="button" class="icon-action-btn icon-action-btn-sm icon-action-btn-light" (click)="alternarTodosLosPermisos()" [disabled]="!permisosCatalogo.length || cargandoPermisos" [title]="todosLosPermisosSeleccionados() ? 'Deseleccionar todos los permisos' : 'Seleccionar todos los permisos'" [attr.aria-label]="todosLosPermisosSeleccionados() ? 'Deseleccionar todos los permisos' : 'Seleccionar todos los permisos'">
+                <i class="bi" [ngClass]="todosLosPermisosSeleccionados() ? 'bi-square' : 'bi-check2-square'" aria-hidden="true"></i>
+                <span class="visually-hidden">{{ todosLosPermisosSeleccionados() ? 'Deseleccionar todos los permisos' : 'Seleccionar todos los permisos' }}</span>
+              </button>
+              <button *ngIf="puedeAgregarQuitarPerfiles == true" type="button" class="icon-action-btn icon-action-btn-sm icon-action-btn-light" (click)="asignarPermisos()" [disabled]="guardandoPermisos || !tieneCambiosPendientes() || !permisosCatalogo.length" title="Grabar permisos" aria-label="Grabar permisos">
+                <span *ngIf="guardandoPermisos" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <i class="bi" [ngClass]="guardandoPermisos ? 'bi-hourglass-split' : 'bi-floppy'" aria-hidden="true"></i>
+                <span class="ms-2" *ngIf="guardandoPermisos">Guardando...</span>
+                <span class="visually-hidden">Guardar permisos</span>
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="cargandoPermisos" class="text-muted">Cargando permisos...</div>
+          <div *ngIf="!apps.length" class="text-muted">No hay apps asociadas al usuario autenticado.</div>
+          <div *ngIf="!cargandoPermisos && !obtenerPermisosVisibles().length" class="text-muted">No hay permisos disponibles para este perfil y app.</div>
+
+          <div *ngIf="obtenerPermisosVisibles().length" class="permisos-groups">
+            <div class="permiso-group" *ngFor="let grupo of getGruposPermisos()">
+              <div class="permiso-group-header hero-panel permiso-group-hero" #grupoHeader>
+                <div class="permiso-group-title-wrap">
+                  <div class="permiso-group-kicker">Grupo de permisos</div>
+                  <h6 class="permiso-group-title mb-1">{{ grupo.nombre.toUpperCase() }}</h6>
+                  <small class="permiso-group-subtitle">{{ grupo.permisos.length }} permiso{{ grupo.permisos.length !== 1 ? 's' : '' }}</small>
+                </div>
+                <div class="permiso-group-badges">
+                  <span class="badge rounded-pill text-bg-light border permiso-group-badge">{{ grupo.permisos.length }} visibles</span>
+                  <button *ngIf="puedeAgregarQuitarPerfiles == true" type="button" class="section-toggle-btn" (click)="alternarSeleccionGrupo(grupo.nombre)" [title]="todosLosPermisosDelGrupoSeleccionados(grupo.nombre) ? 'Deseleccionar todo' : 'Seleccionar todo'" [attr.aria-label]="todosLosPermisosDelGrupoSeleccionados(grupo.nombre) ? 'Deseleccionar todo' : 'Seleccionar todo'">
+                    <i class="bi" [ngClass]="todosLosPermisosDelGrupoSeleccionados(grupo.nombre) ? 'bi-check2-square' : 'bi-check2-all'" aria-hidden="true"></i>
+                    <span class="visually-hidden">{{ todosLosPermisosDelGrupoSeleccionados(grupo.nombre) ? 'Deseleccionar todo' : 'Seleccionar todo' }}</span>
+                  </button>
+                  <button type="button" class="section-toggle-btn" (click)="toggleGrupo(grupo.nombre, $event, grupoHeader)" [attr.aria-expanded]="isGrupoAbierto(grupo.nombre)" aria-label="Plegar o desplegar grupo de permisos">
+                    <i class="bi" [ngClass]="isGrupoAbierto(grupo.nombre) ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="permisos-grid" *ngIf="isGrupoAbierto(grupo.nombre) ">
+                <div 
+                  *ngFor="let permiso of grupo.permisos"
+                  class="permiso-card"
+                  [class.active]="permiso.seleccionado"
+                  [class.asignado]="permiso.asignado"
+                  [class.disponible]="!permiso.asignado"
+                  (click)="togglePermisoSeleccionado(permiso, !permiso.seleccionado)"
+                >
+                  <div class="permiso-card-header">
+                    <span class="permiso-state" [class.on]="permiso.seleccionado" *ngIf="puedeAgregarQuitarPerfiles == true">
+                      <i class="bi" [ngClass]="permiso.seleccionado ? 'bi-check-circle-fill' : 'bi-circle'"></i>
+                      {{ permiso.seleccionado ? 'Incluido' : 'Disponible' }}
+                    </span>
+                    <span class="permiso-state permiso-state-assigned" *ngIf="permiso.asignado">
+                      <i style="color: green;" *ngIf="puedeAgregarQuitarPerfiles == false" class="bi bi-check-circle-fill"></i>
+                      Asignado
+                    </span>
+                    <span class="permiso-state permiso-state-available" *ngIf="!permiso.asignado && puedeAgregarQuitarPerfiles == false">
+                      <i class="bi bi-check-circle" style="color: #6b7280;"></i>
+                      Disponible
+                    </span>
+                  </div>
+                  <div class="permiso-card-title">{{ permiso.nombre }}</div>
+                  <div class="permiso-card-meta">
+                    <span class="badge rounded-pill text-bg-primary" *ngIf="permiso.esPrincipal">Principal</span>
+                    <span *ngIf="permiso.alias">{{ permiso.alias }}</span>
+                    <span *ngIf="permiso.modulo">Módulo: {{ permiso.modulo }}</span>
+                  </div>
+                  <div class="permiso-card-desc" *ngIf="permiso.descripcion">{{ permiso.descripcion }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

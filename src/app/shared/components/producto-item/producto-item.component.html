@@ -1,0 +1,236 @@
+        <!-- Mostrar mensaje si falta el precio de lista (todas variantes) -->
+        
+<div class="card h-100 shadow-sm producto-card" [ngClass]="{ 'producto-card-sin-imagen': !tieneImagenProducto(producto) }">
+  <!-- Badge Más vendido -->
+  <div class="producto-card-media">
+    <div class="producto-card-media-frame">
+      <img
+        *ngIf="tieneImagenProducto(producto)"
+        [src]="getProductoImagen(producto)"
+        class="card-img-top producto-oferta-img"
+        [alt]="producto.nombre"
+        (error)="onProductoImageError(producto, $event)"
+        style="cursor:pointer"
+        (click)="verProducto(producto, $event)"
+      >
+    </div>
+    <!-- #106642-->
+    <div *ngIf="producto.masVendido" style="position: absolute; left: 0; bottom: 0; z-index: 2; margin: 8px;">
+      <span class="badge d-flex align-items-center gap-1 px-2 py-1" style="background: #106642; color: #000000; font-size: 0.8em; font-weight: bold; box-shadow: 0 2px 6px #0002; border-radius: 0.6em;">
+        <img src="assets/icons/crown.svg" alt="Más vendido" width="15" height="15" style="margin-right:2px;"/>
+        <span style="color:#ffffff; letter-spacing:0.5px;">Más Vendido</span>
+      </span>
+    </div>
+  </div>
+
+  <div class="marca-overlay" *ngIf="getMarcaNombre(producto) && getMarcaNombre(producto).toLowerCase() !== 'sin marca'">
+    <span class="badge bg-light text-dark d-inline-flex align-items-center gap-1">
+      <img
+        *ngIf="getMarcaLogoPath(producto)"
+        [src]="getMarcaLogoPath(producto)"
+        [alt]="getMarcaNombre(producto)"
+        class="marca-logo-badge"
+        (error)="onMarcaLogoError(producto, $event)"
+      >
+      <span *ngIf="!getMarcaLogoPath(producto)">Marca: {{ getMarcaNombre(producto) }}</span>
+    </span>
+  </div>
+  <div class="card-body d-flex flex-column">
+    <div class="d-flex align-items-center justify-content-between mb-1">
+      <h5 class="card-title mb-0">{{ producto.nombre || 'Producto Demo' }}</h5>
+    </div>
+    
+    <p class="card-text">{{ producto.descripcion || 'Descripción de producto demo.' }}</p>
+    <div class="mb-2 d-flex flex-wrap align-items-center gap-2">
+      <!-- Badge de categoría padre e hija -->
+      <ng-container *ngIf="producto.categoria">
+        <span *ngIf="producto.categoria.parent" class="badge bg-secondary">{{ producto.categoria.parent.nombre }}</span>
+        <span class="badge bg-info">{{ producto.categoria.nombre }}</span>
+      </ng-container>
+      
+      <span *ngIf="!tieneImagenProducto(producto) " class="badge bg-light text-dark d-inline-flex align-items-center gap-1">
+        <img
+          *ngIf="getMarcaLogoPath(producto)"
+          [alt]="getMarcaNombre(producto)"
+          class="marca-logo-badge"
+          (error)="onMarcaLogoError(producto, $event)"
+        >
+        <span *ngIf="!getMarcaLogoPath(producto)">Marca: {{ getMarcaNombre(producto) }}</span>
+      </span>
+      <!--<span *ngIf="!esStockAgotado(producto?.stock)" class="badge bg-success text-white">Stock: {{ getStockLabel(producto) }}</span>
+      -->
+      <span *ngIf="esStockAgotado(producto?.stock)" class="badge bg-danger text-white text-uppercase">Sin stock disponible</span>
+    </div>
+    <!-- Clasificacion global -->
+   <div *ngIf="(ratingGlobal ?? producto.rating?.global) > 1" class="text-muted small mb-2 d-flex align-items-center">
+      <span class="text-secondary small me-2">Calificación global</span>
+      <i class="bi bi-people me-1"></i>
+      <ng-container *ngFor="let star of [1,2,3,4,5]">
+        <i class="bi me-1"
+          [ngClass]="(ratingGlobal ?? producto.rating?.global) >= star ? 'bi-star-fill text-warning' : 'bi-star text-secondary opacity-50'"
+          style="font-size: 0.95em; cursor:default"></i>
+      </ng-container>
+      <span class="fw-bold ms-1">{{ (ratingGlobal ?? producto.rating?.global) | number:'1.1-2' }}</span>
+    </div>
+    <div *ngIf="productosRelacionados.length" class="related-products-block mb-2">
+      <div class="related-products-title text-primary  small mb-1"><i class="bi bi-star-fill"></i> También te puede interesar ({{ productosRelacionados.length }})</div>
+      <div class="related-products-scroll d-flex gap-1">
+        <button
+          type="button"
+          class="related-product-pill"
+          *ngFor="let relacionado of productosRelacionados; trackBy: trackByRelacionado"
+          (click)="onRelacionadoClick(relacionado, $event)"
+          [title]="relacionado.nombre || 'Producto relacionado'"
+        >
+          <img
+            [src]="getProductoImagen(relacionado)"
+            [alt]="relacionado.nombre || 'Relacionado'"
+            class="related-product-thumb"
+            (error)="onProductoImageError(relacionado, $event)"
+          >
+        </button>
+      </div>
+    </div>
+    <div class="mb-2">
+      <!-- Mostrar promos y detalles arriba del precio -->
+      <div class="mb-1">
+        <ng-container *ngIf="otrasPromociones.length > 0 || getPromoXPorY()">
+          <span style="font-size:1.1em;">🏷️</span>
+          <ng-container *ngIf="getPromoXPorY() as promoXPorY">
+            <span style="font-weight:bold;font-size:0.92em;">
+              {{ promoXPorY.detalle }}
+            </span>
+          </ng-container>
+          <ng-container *ngFor="let promo of otrasPromociones">
+            <span *ngIf="promo.promocionTipo?.alias !== 'cuotas'   && promo.promocionTipo?.alias !== 'banco'" style="font-weight:bold;font-size:0.92em;">
+              {{ promo.nombre || 'Promoción' }}:
+              <ng-container *ngIf="promo.acciones && promo.acciones.length">
+                <ng-container *ngFor="let accion of promo.acciones">
+                  <span *ngIf="accion.detalle" style="font-size:0.97em; color:#198754;"> {{ accion.detalle }}</span>
+                </ng-container>
+              </ng-container>
+            </span>
+          </ng-container>
+        </ng-container>
+        <div *ngFor="let promo of otrasPromociones" class="text-muted small mt-1 lh-sm">
+          <ng-container *ngIf="promo.descripcion || promo.promocionTipo?.descripcion || promo.acciones?.length">
+            <span *ngIf="promo.descripcion">{{ promo.descripcion }}</span>
+            <span *ngIf="!promo.descripcion && promo.promocionTipo?.descripcion">{{ promo.promocionTipo.descripcion }}</span>
+            <span *ngIf="!promo.descripcion && !promo.promocionTipo?.descripcion && promo.acciones?.length">
+              {{ promo.acciones[0]?.detalle || promo.nombre || 'Promoción aplicada' }}
+            </span>
+          </ng-container>
+        </div>
+      </div>
+      <!-- Mostrar precio según lo que viene del backend -->
+      <ng-container>
+        <!-- Caso especial: promo x_por_y y cantidad >= umbral -->
+        <ng-container *ngIf="getPromoXPorY() as promoXPorY">
+          <ng-container *ngIf="producto.cantidad >= promoXPorY.valor">
+            <div>
+              <span class="text-danger text-decoration-line-through me-2 fs-6 align-middle fw-bold" style="font-size: 1.1rem;">
+                Precio regular: ${{ (producto.precio ?? producto.precioLista) | number:'1.2-2' }}
+              </span>
+            </div>
+            <div>
+              <span class="fw-bold text-success fs-5 align-middle" style="font-size: 1.15rem;">
+                Precio promo: <span class="fw-bold">${{ producto.precioDescuento | number:'1.2-2' }}</span> <span class="text-secondary ms-1" style="font-size: 0.95rem; font-weight: normal;">C/U por unidad</span>
+              </span>
+            </div>
+          </ng-container>
+          <ng-container *ngIf="!(producto.cantidad >= promoXPorY.valor)">
+            <span class="fw-bold text-success fs-2 align-middle" [ngClass]="{ 'sin-stock-price': esStockAgotado(producto?.stock) }">
+              ${{ (producto.precio ?? producto.precioLista ?? 0) | number:'1.2-2' }}
+            </span>
+          </ng-container>
+        </ng-container>
+        <!-- Caso general: sin promo x_por_y -->
+        <ng-container *ngIf="!getPromoXPorY()">
+          <span *ngIf="producto.promocionAplicada && producto.precioDescuento != null && (producto.precio ?? producto.precioLista)" class="text-muted text-decoration-line-through me-2 fs-6 align-middle" style="font-size: 1.1rem;">
+            ${{ (producto.precio ?? producto.precioLista) | number:'1.2-2' }}
+          </span>
+          <span *ngIf="producto.promocionAplicada && producto.precioDescuento != null" class="fw-bold text-success fs-2 align-middle" [ngClass]="{ 'sin-stock-price': esStockAgotado(producto?.stock) }">
+            ${{ producto.precioDescuento | number:'1.2-2' }}
+          </span>
+          <span *ngIf="!producto.promocionAplicada || producto.precioDescuento == null" class="fw-bold text-success fs-2 align-middle" [ngClass]="{ 'sin-stock-price': esStockAgotado(producto?.stock) }">
+            ${{ (producto.precio ?? producto.precioLista ?? 0) | number:'1.2-2' }}
+          </span>
+          <span *ngIf="(producto?.precio == null && producto?.precioLista == null) || ((producto?.precio ?? producto?.precioLista ?? 0) === 0)" class="text-danger small">Precio no disponible</span>
+        </ng-container>
+      </ng-container>
+
+     
+
+      <!-- Mostrar info de cuotas si corresponde, siempre sobre el precio con descuento si existe -->
+      <div *ngIf="(getCuotasPromocion() ?? 0) > 0" class="cuotas-box d-inline-flex align-items-center gap-2 mt-1 px-2 py-1 rounded">
+        <span class="fw-bold text-success" style="font-size: 0.97em;">{{ (getCuotasPromocion() ?? 0) | number:'1.0-0' }} cuotas</span>
+        <span class="fw-bold text-success">de ${{ ((producto.promocionAplicada && producto.precioDescuento != null ? producto.precioDescuento : (producto.precio ?? producto.precioLista ?? 0)) / (getCuotasPromocion() ?? 1)) | number:'1.2-2' }}</span>
+        <span class="text-success ms-1">con </span>
+       
+        <ng-container *ngIf="getTarjetasPromocion().length">
+          <ng-container *ngFor="let tarjeta of getTarjetasPromocion()">
+           <!-- <span>{{tarjeta}}</span>-->
+            <img *ngIf="tarjeta.toLowerCase() === 'visa'" src="assets/icons/credit-card-visa.svg" alt="Visa" width="18" height="20%" />
+            <img *ngIf="tarjeta.toLowerCase() === 'mastercard'" src="assets/icons/credit-card-master.svg" alt="Mastercard" width="20%" />
+             <img *ngIf="tarjeta.toLowerCase() === 'bbva'" src="assets/icons/credit-card-bbva.svg" alt="BBVA" width="20%" />
+             <img *ngIf="tarjeta.toLowerCase() !== 'visa' && tarjeta.toLowerCase() !== 'mastercard'  && tarjeta.toLowerCase() !== 'bbva' && tarjeta.toLowerCase() !== 'bbva'" src="assets/icons/credit-card.svg" alt="Tarjeta" width="18" height="18" class="ms-2 me-1"/>
+           <!-- <span class="text-dark">{{ tarjeta }}</span>-->
+          </ng-container>
+        </ng-container>
+       <!-- <ng-container *ngIf="getBancosPromocion().length">
+          <span class="text-dark ms-2">{{ getBancosPromocion().join(', ') }}</span>
+        </ng-container>-->
+      </div>
+             
+    </div>
+    </div>
+    <div class="d-flex align-items-center mt-auto gap-2 justify-content-end w-100 producto-card-bottom">
+        <div class="d-flex align-items-center gap-2 w-100 justify-content-between">
+          <div class="d-flex flex-column">
+            <div class="d-flex align-items-center gap-1">
+              <ng-container *ngFor="let star of [1,2,3,4,5]">
+                <i class="bi"
+                  [ngClass]="producto.rating?.usuario >= star ? 'bi-star-fill text-primary' : 'bi-star text-secondary opacity-50'"
+                  class="fs-6"
+                  (click)="onSetRating(producto, star, $event)"
+                  style="cursor:pointer"></i>
+              </ng-container>
+              <span class="ms-2 text-muted small">Tu rating</span>
+            </div>
+            <!-- Promedio global movido arriba -->
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button
+              *ngIf="puedeEditarArticulos && producto?.id"
+              type="button"
+              class="p-0 border-0 bg-transparent shadow-none producto-action-button"
+              [title]="'Editar artículo'"
+              aria-label="Editar artículo"
+              (click)="editarArticulo(producto, $event)"
+            >
+              <i style="color:grey" class="bi bi-pencil fs-5"></i>
+            </button>
+            <button class="p-0 border-0 bg-transparent shadow-none" style="cursor:pointer"
+              [title]="modoDesvincularFavorito ? 'Quitar de favoritos' : 'Marcar como favorito'"
+              (click)="onToggleFavorito($event, producto)">
+              <i class="bi"
+                [ngClass]="modoDesvincularFavorito
+                  ? 'bi-heartbreak-fill text-danger'
+                  : (favoritos[+producto.id] ? 'bi-heart-fill text-danger' : 'bi-heart text-danger')"
+                class="fs-4"></i>
+            </button>
+            
+            <button
+              class="p-0 border-0 bg-transparent shadow-none"
+              style="cursor:pointer"
+              [title]="!productoTieneImpuestos(producto) ? 'Este producto no tiene impuestos cargados' : (esStockAgotado(producto?.stock) ? 'Sin stock disponible' : 'Agregar al carrito')"
+              (click)="onAgregarCarrito($event, producto)"
+              [disabled]="esStockAgotado(producto?.stock) || !productoTieneImpuestos(producto)"
+            >
+              <i class="bi bi-cart-plus fs-4" [ngClass]="(esStockAgotado(producto?.stock) || !productoTieneImpuestos(producto)) ? 'text-muted' : 'text-primary'"></i>
+            </button>
+            
+          </div>
+        </div>
+    </div>
+  </div>

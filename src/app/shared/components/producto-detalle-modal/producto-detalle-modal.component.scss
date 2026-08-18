@@ -1,0 +1,138 @@
+.modal-image-wrap {
+  position: relative;
+}
+
+.marca-overlay {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.9rem;
+  z-index: 2;
+}
+
+.marca-logo-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: contain;
+  background: #fff;
+}
+
+.galeria-modal-slider {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  width: 100%;
+}
+
+.galeria-modal-thumb {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.galeria-modal-thumb:hover {
+  transform: translateY(-1px);
+}
+
+.galeria-modal-thumb-active {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25);
+}
+
+.relacionados-slider {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  width: 100%;
+}
+
+.relacionado-slide {
+  border: 1px solid #e9ecef;
+  background: #fff;
+  border-radius: 0.65rem;
+  padding: 0.45rem;
+  min-width: 260px;
+  max-width: 260px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.55rem;
+  cursor: pointer;
+}
+
+.relacionado-slide-img {
+  width: 82px;
+  height: 82px;
+  object-fit: cover;
+  border-radius: 0.45rem;
+  flex-shrink: 0;
+}
+
+.relacionado-slide-body {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.relacionado-slide-name {
+  font-size: 0.76rem;
+  line-height: 1.1;
+  text-align: left;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.relacionado-slide-price {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0d6efd;
+  line-height: 1;
+}
+
+.relacionado-cantidad-wrap {
+  width: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.25rem;
+}
+
+.relacionado-slide-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.35rem;
+}
+
+.relacionado-cantidad-label {
+  font-size: 0.68rem;
+  color: #6c757d;
+  font-weight: 600;
+}
+
+.relacionado-cantidad-input {
+  width: 56px;
+  text-align: center;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+  font-size: 0.78rem;
+  line-height: 1.1;
+}
+
+.relacionado-slide-add {
+  padding: 0.12rem 0.45rem;
+  line-height: 1;
+  width: fit-content;
+}
+
+.relacionado-slide-add .bi {
+  font-size: 0.88rem;
+}

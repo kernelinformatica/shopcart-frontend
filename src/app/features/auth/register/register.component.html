@@ -1,0 +1,162 @@
+<div class="register-shell">
+  <div class="register-card">
+   
+
+    <div class="login-title">Registro de nuevo usuario</div>
+    <div class="login-description">
+      <p>
+        Completá tus datos para crear tu cuenta y acceder a
+        <span *ngIf="empresa?.apps?.[0]?.nombre; else defaultApp">{{ empresa.apps[0].nombre }}</span>
+        <ng-template #defaultApp>ShopCart</ng-template>.
+      </p>
+    </div>
+
+    <div *ngIf="checkingService" class="alert alert-info text-center mb-3">
+      Verificando disponibilidad del servicio...
+    </div>
+
+    <div *ngIf="!checkingService && !serviceAvailable" class="alert alert-danger text-center mb-3">
+      Servicio no disponible, intente más tarde...
+    </div>
+
+    <div *ngIf="registroExitoso" class="alert alert-success text-center mt-3">
+      <h4 class="mb-2">¡Felicitaciones!</h4>
+      <p class="mb-2">Ahora podés comenzar a usar la plataforma.</p>
+      <div class="small text-muted">Tu cuenta quedó creada correctamente.</div>
+    </div>
+
+    <form *ngIf="!checkingService && serviceAvailable && !registroExitoso" [formGroup]="form" (ngSubmit)="submit()" class="register-form">
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <label class="form-label">Nombre</label>
+          <input class="form-control" formControlName="nombre" required [class.is-invalid]="form.get('nombre')?.invalid && (form.get('nombre')?.touched || form.get('nombre')?.dirty)" />
+          <div *ngIf="form.get('nombre')?.invalid && (form.get('nombre')?.touched || form.get('nombre')?.dirty)" class="text-danger small">
+            <span *ngIf="form.get('nombre')?.errors?.['required']">El nombre es obligatorio.</span>
+            <span *ngIf="form.get('nombre')?.errors?.['maxLength']">Máximo 50 caracteres.</span>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label">Apellido</label>
+          <input class="form-control" formControlName="apellido" required [class.is-invalid]="form.get('apellido')?.invalid && (form.get('apellido')?.touched || form.get('apellido')?.dirty)" />
+          <div *ngIf="form.get('apellido')?.invalid && (form.get('apellido')?.touched || form.get('apellido')?.dirty)" class="text-danger small">
+            <span *ngIf="form.get('apellido')?.errors?.['required']">El apellido es obligatorio.</span>
+            <span *ngIf="form.get('apellido')?.errors?.['maxLength']">Máximo 50 caracteres.</span>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label">Email (para acceso)</label>
+          <input type="email" class="form-control" formControlName="email" required />
+          <div *ngIf="form.get('email')?.touched && form.get('email')?.invalid" class="text-danger small">
+            <span *ngIf="form.get('email')?.errors?.['required']">El email es obligatorio.</span>
+            <span *ngIf="form.get('email')?.errors?.['email']">Formato de email inválido.</span>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label">Teléfono</label>
+          <div class="input-group">
+            <span class="input-group-text phone-prefix">+54 9</span>
+            <input class="form-control" formControlName="telefono" required placeholder="Ej: 1123456789" maxlength="10" [class.is-invalid]="form.get('telefono')?.invalid && (form.get('telefono')?.touched || form.get('telefono')?.dirty)" />
+          </div>
+          <div *ngIf="form.get('telefono')?.invalid && (form.get('telefono')?.touched || form.get('telefono')?.dirty)" class="text-danger small">
+            <span *ngIf="form.get('telefono')?.errors?.['required']">El teléfono es obligatorio.</span>
+            <span *ngIf="form.get('telefono')?.errors?.['pattern']">Debe ingresar solo los 10 dígitos del celular.</span>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label">Contraseña (para acceso)</label>
+          <input type="password" class="form-control" formControlName="password" required />
+          <div *ngIf="form.get('password')?.touched && form.get('password')?.invalid" class="text-danger small">
+            <span *ngIf="form.get('password')?.errors?.['required']">La contraseña es obligatoria.</span>
+            <span *ngIf="form.get('password')?.errors?.['minLength']">Mínimo 6 caracteres.</span>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label">Repetir contraseña</label>
+          <input type="password" class="form-control" formControlName="repeatPassword" required />
+          <div *ngIf="form.get('repeatPassword')?.touched && form.get('repeatPassword')?.invalid" class="text-danger small">
+            <span *ngIf="form.get('repeatPassword')?.errors?.['required']">Debés repetir la contraseña.</span>
+          </div>
+          <div *ngIf="form.get('repeatPassword')?.touched && form.value.password !== form.value.repeatPassword" class="text-danger small">
+            Las contraseñas deben coincidir.
+          </div>
+        </div>
+
+       
+
+        <div class="col-12">
+          <label class="form-label">Dirección</label>
+          <input class="form-control" formControlName="direccion" required [class.is-invalid]="form.get('direccion')?.invalid && (form.get('direccion')?.touched || form.get('direccion')?.dirty)" />
+          <div *ngIf="form.get('direccion')?.invalid && (form.get('direccion')?.touched || form.get('direccion')?.dirty)" class="text-danger small">
+            <span *ngIf="form.get('direccion')?.errors?.['required']">La dirección es obligatoria.</span>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Localidad</label>
+          <ng-container *ngIf="!otraLocalidadSeleccionada; else manualLocalidad">
+            <div class="localidad-search-wrap">
+              <input class="form-control mb-2" placeholder="Buscar localidad..." [ngModel]="localidadBusqueda" (ngModelChange)="setLocalidadBusqueda($event);buscarLocalidades($event)" [ngModelOptions]="{standalone: true}" (focus)="showLocalidadMenu=true" (blur)="onLocalidadBlur()" autocomplete="off" />
+              <ul *ngIf="showLocalidadMenu && localidadesFiltradas.length > 0" class="dropdown-menu show w-100 localidad-menu">
+                <li *ngFor="let loc of localidadesFiltradas" class="dropdown-item py-1 localidad-item" (mousedown)="onSeleccionarLocalidad(loc)">
+                  <span class="fw-semibold">{{ loc.nombre }} ({{ loc.codigoPostal }})</span>
+                  <span class="text-muted"> - {{ loc.provincia || (loc.display?.split(') ').pop()?.replace(')', '')) }}</span>
+                </li>
+              </ul>
+            </div>
+            <div *ngIf="form.get('localidad')?.touched && form.get('localidad')?.invalid" class="text-danger small">
+              <span *ngIf="form.get('localidad')?.errors?.['required']">La localidad es obligatoria.</span>
+            </div>
+          </ng-container>
+          <ng-template #manualLocalidad>
+            <div class="row g-2">
+              <div class="col-12 col-md-4">
+                <input class="form-control" placeholder="Código postal" [(ngModel)]="codigoPostalManual" name="codigoPostalManual" [ngModelOptions]="{standalone: true}" />
+              </div>
+              <div class="col-12 col-md-4">
+                <input class="form-control" placeholder="Nombre de localidad" [(ngModel)]="nombreLocalidadManual" name="nombreLocalidadManual" [ngModelOptions]="{standalone: true}" />
+              </div>
+              <div class="col-12 col-md-4">
+                <select class="form-select" [(ngModel)]="provinciaManual" name="provinciaManual" [ngModelOptions]="{standalone: true}">
+                  <option value="" disabled selected>Provincia</option>
+                  <option *ngFor="let p of provincias" [value]="p">{{ p }}</option>
+                </select>
+              </div>
+            </div>
+          </ng-template>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Nro de Cuenta Corriente (Opcional)</label>
+          <input
+            type="text"
+            class="form-control"
+            formControlName="opciones"
+            inputmode="numeric"
+            maxlength="5"
+            placeholder="00000"
+            [class.is-invalid]="form.get('opciones')?.invalid && (form.get('opciones')?.touched || form.get('opciones')?.dirty)"
+          />
+          <div *ngIf="form.get('opciones')?.invalid && (form.get('opciones')?.touched || form.get('opciones')?.dirty)" class="text-danger small">
+            <span *ngIf="form.get('opciones')?.errors?.['pattern']">Debe contener exactamente 5 números.</span>
+          </div>
+          <small style="color: grey;" class="text-muted d-block mt-1">Si es socio de la cooperativa, ingresá su número de cuenta corriente de 5 dígitos.</small>
+
+        </div>
+
+        <div class="col-12 d-flex justify-content-between align-items-center gap-3 pt-1 flex-wrap">
+          <a routerLink="/auth" class="btn btn-link px-0">¿Ya tenés cuenta? Iniciá sesión</a>
+          <button class="btn btn-primary px-4" type="submit" [disabled]="!puedeRegistrar || loading">
+            {{ loading ? 'Registrando...' : 'Registrarse' }}
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="error" class="alert alert-danger mt-3 mb-0">{{ error }}</div>
+    </form>
+  </div>
+</div>

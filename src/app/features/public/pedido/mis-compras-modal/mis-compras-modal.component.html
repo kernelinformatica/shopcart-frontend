@@ -1,0 +1,304 @@
+<div #modalEl class="modal fade" tabindex="-1" aria-labelledby="misComprasModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="misComprasModalLabel">
+          <i class="bi bi-bag-check text-success"></i>
+          Mis compras
+          <span *ngIf="compras.length > 0" class="badge bg-success">{{ compras.length }}</span>
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="refrescar()" [disabled]="cargandoMisCompras" title="Refrescar">
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar" (click)="onCerrarMisCompras()"></button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <!-- Filtros -->
+        <form class="row g-2 align-items-end mb-3 small" (submit)="$event.preventDefault(); aplicarFiltrosMisCompras()">
+          <div class="col-12 col-md-3">
+            <label class="form-label mb-1">Estado</label>
+            <select class="form-select form-select-sm" [(ngModel)]="filtroMisComprasEstado" name="filtroEstadoMisCompras">
+              <option *ngFor="let e of estadosPedidoSelect" [value]="e.value">{{ e.label }}</option>
+            </select>
+          </div>
+          <div class="col-6 col-md-2">
+            <label class="form-label mb-1">Desde</label>
+            <input type="date" class="form-control form-control-sm" [(ngModel)]="filtroMisComprasDesde" name="filtroDesdeMisCompras" />
+          </div>
+          <div class="col-6 col-md-2">
+            <label class="form-label mb-1">Hasta</label>
+            <input type="date" class="form-control form-control-sm" [(ngModel)]="filtroMisComprasHasta" name="filtroHastaMisCompras" />
+          </div>
+          <div class="col-12 col-md-3">
+            <label class="form-label mb-1">Buscar Nº</label>
+            <input type="search" class="form-control form-control-sm" placeholder="Ej. 123" [(ngModel)]="filtroMisComprasBusqueda" name="filtroBusquedaMisCompras" />
+          </div>
+          <div class="col-12 col-md-2 d-flex gap-1">
+            <button type="submit" class="btn btn-primary btn-sm flex-fill">Buscar</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" (click)="limpiarFiltrosMisCompras()" title="Limpiar filtros">
+              <i class="bi bi-eraser"></i>
+            </button>
+          </div>
+        </form>
+
+        <div *ngIf="cargandoMisCompras" class="text-center py-4 text-muted">
+          <div class="spinner-border spinner-border-sm me-2"></div>
+          Cargando tus compras...
+        </div>
+
+        <div *ngIf="!cargandoMisCompras && errorMisCompras" class="alert alert-warning small mb-3">
+          <i class="bi bi-exclamation-triangle me-1"></i> {{ errorMisCompras }}
+        </div>
+
+        <ng-container *ngIf="!cargandoMisCompras && !errorMisCompras">
+          <ng-container *ngIf="misComprasFiltradas.length > 0; else sinComprasGlobal">
+            <div class="list-group list-group-flush">
+              <div *ngFor="let compra of comprasPaginadas" class="list-group-item px-2 py-3">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                  <div>
+                    <div class="fw-bold d-flex align-items-center gap-2">
+                      <i class="bi bi-receipt text-primary"></i>
+                      Compra N°: {{ compra.id }}
+                      <span *ngIf="compra.metodoPago" class="ms-2 small text-muted">
+                        <i class="bi bi-credit-card me-1"></i>{{ compra.metodoPago }}
+                        <span *ngIf="compra.createdAt">
+                          &nbsp;|&nbsp;
+                          <i class="bi bi-calendar-event me-1"></i>
+                          {{ compra.createdAt | date:'dd-MMM' }} a las {{ compra.createdAt | date:'HH:mm' }}
+                        </span>
+                      </span>
+                      <span *ngIf="esPedidoDemorado(compra)" class="badge bg-danger ms-2">
+                        <i class="bi bi-exclamation-triangle me-1"></i>Demorado
+                      </span>
+                    </div>
+                    <div class="small text-muted">
+                      <span *ngIf="compra.tipoEntrega">
+                        <i class="bi bi-truck me-1"></i>{{ compra.tipoEntrega }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="text-end">
+                    <div class="fw-bold text-success d-flex align-items-center gap-2">
+                      $ {{ compra.total | number:'1.2-2' }}
+                      <span class="text-muted">|</span>
+                      <span class="badge bg-light text-dark border small">{{ totalItemsPedido(compra) }} ítem(s)</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-2 d-flex flex-wrap gap-2 align-items-center">
+                  <span *ngIf="compra.estado === 'cancelado' || compra.estado === 'rechazado'; else badgeEnvio"
+                        class="badge bg-danger">
+                    <i class="bi bi-x-circle me-1"></i>
+                    {{ compra.estado === 'cancelado' ? 'Rechazado' : 'Cancelado' }}
+                  </span>
+                  <ng-template #badgeEnvio>
+                    <span *ngIf="compra.pedidoEnvio?.envioEstado as envioEstado"
+                          class="badge"
+                          [ngClass]="badgeColorTracking(envioEstado.nombre || envioEstado.descripcion || envioEstado.codigo)">
+                      <ng-container *ngIf="['entregado','confirmado'].includes((envioEstado.codigo || '').toLowerCase()); else iconoCamion">
+                        <i class="bi bi-check-circle me-1"></i>
+                      </ng-container>
+                      <ng-template #iconoCamion>
+                        <i class="bi bi-truck me-1"></i>
+                      </ng-template>
+                      {{ envioEstado.nombre || envioEstado.descripcion || envioEstado.codigo }}
+                    </span>
+                  </ng-template>
+                  <span *ngIf="compra.pedidoEnvio?.trackingCodigo as track" class="badge bg-light text-dark border">
+                    <i class="bi bi-upc-scan me-1"></i> Tracking: {{ track }}
+                  </span>
+                  <button class="btn btn-link btn-sm ms-auto p-0 text-decoration-none"
+                          type="button"
+                          (click)="togglePedidoExpandido(compra.id)"
+                          [attr.aria-expanded]="estaExpandido(compra.id)">
+                    {{ estaExpandido(compra.id) ? 'Ocultar detalle' : 'Ver detalle' }}
+                    <i class="bi" [ngClass]="estaExpandido(compra.id) ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                  </button>
+                </div>
+                <div *ngIf="estaExpandido(compra.id)" class="mt-3 border rounded p-2 bg-light">
+                  <div class="row g-3">
+                    <!-- Tabs para reintentar pago en cancelado/rechazado -->
+                    <ng-container *ngIf="['rechazado','cancelado','pendiente'].includes((compra.pedidoEnvio?.envioEstado?.codigo || compra.estado || '').toLowerCase())">
+                      <div class="col-12">
+                        <ul class="nav nav-tabs mb-2" role="tablist">
+                          <li class="nav-item" role="presentation">
+                            <button class="nav-link" [class.active]="!compra._tabPago || compra._tabPago === 'info'" (click)="compra._tabPago = 'info'" type="button" role="tab">Información</button>
+                          </li>
+                          <li class="nav-item" role="presentation">
+                            <button class="nav-link" [class.active]="compra._tabPago === 'pagar'" (click)="compra._tabPago = 'pagar'" type="button" role="tab">Elegir pasarela de pago</button>
+                          </li>
+                        </ul>
+                        <div class="tab-content">
+                          <div class="tab-pane fade show" [class.active]="!compra._tabPago || compra._tabPago === 'info'">
+                            <div class="alert alert-warning d-flex align-items-center justify-content-between gap-2 mb-2 py-2 px-3">
+                              <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-info-circle me-2"></i>
+                                  <span class="small" *ngIf="(compra.pedidoEnvio?.envioEstado?.codigo || '').toLowerCase() === 'pendiente'">
+                                  El pedido está pendiente de pago. Puedes intentar pagar nuevamente.
+                                </span>
+                               
+                                <span class="small" *ngIf="(compra.pedidoEnvio?.envioEstado?.codigo || '').toLowerCase() === 'rechazado'">
+                                  El pedido fue rechazado. Puedes intentar pagar nuevamente.
+                                </span>
+                                <span class="small" *ngIf="(compra.pedidoEnvio?.envioEstado?.codigo || '').toLowerCase() === 'cancelado'">
+                                  El pedido fue cancelado o rechazado. Puedes intentar pagar nuevamente si corresponde.
+                                </span>
+                              </div>
+                              <button type="button" class="btn btn-outline-primary btn-sm ms-auto" (click)="editarPago(compra)">
+                                <i class="bi bi-credit-card"></i> Editar / Pagar
+                              </button>
+                            </div>
+                          </div>
+                          <div class="tab-pane fade show" [class.active]="compra._tabPago === 'pagar'">
+                            <div class="alert alert-info mb-2 py-2 px-3">
+                              <i class="bi bi-arrow-repeat me-2"></i>
+                              Elegí la pasarela de pago para reintentar el pago de este pedido:
+                            </div>
+                            <div class="mb-2">
+                              <select class="form-select form-select-sm w-auto d-inline-block" [(ngModel)]="compra._pasarelaSeleccionada" name="pasarelaPago_{{compra.id}}">
+                                <option value="">Seleccionar pasarela...</option>
+                                <option *ngFor="let fp of formasPago" [value]="fp.codigo">{{ fp.nombre }}</option>
+                              </select>
+                              <ng-container *ngIf="compra._pasarelaSeleccionada">
+                                <button *ngIf="compra._pasarelaSeleccionada === 'mercadopago' && !compra._simulandoPago" type="button" class="btn btn-success btn-sm ms-2" (click)="simularPagoMercadoPago(compra)">
+                                  <i class="bi bi-cash-coin"></i> Pagar con MercadoPago
+                                </button>
+                                <div *ngIf="compra._simulandoPago">
+                                  <div class="d-flex justify-content-center gap-1 flex-wrap mb-2 mt-2">
+                                    <button class="btn btn-success btn-xs btn-sm" type="button" (click)="setResultadoSimulado(compra, 'aprobado')">Aprobado</button>
+                                    <button class="btn btn-danger btn-xs btn-sm" type="button" (click)="setResultadoSimulado(compra, 'rechazado')">Rechazado</button>
+                                    <button class="btn btn-warning btn-xs btn-sm" type="button" (click)="setResultadoSimulado(compra, 'pendiente')">Pendiente</button>
+                                  </div>
+                                  <div *ngIf="compra._resultadoSimulado" class="mt-2 alert py-1" [ngClass]="{
+                                      'alert-success': compra._resultadoSimulado === 'aprobado',
+                                      'alert-danger': compra._resultadoSimulado === 'rechazado',
+                                      'alert-warning': compra._resultadoSimulado === 'pendiente'
+                                    }">
+                                    Pago simulado: {{ compra._resultadoSimulado }}
+                                  </div>
+                                </div>
+                                <!-- Aquí puedes agregar botones para otras pasarelas -->
+                              </ng-container>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </ng-container>
+                    <!-- Fin tabs pago -->
+                    <!-- Si NO está en pendiente/rechazado/cancelado, mostrar seguimiento -->
+                    <ng-container *ngIf="!['pendiente','rechazado','cancelado'].includes((compra.pedidoEnvio?.envioEstado?.codigo || compra.estado || '').toLowerCase())">
+                      <div class="col-12 col-md-5">
+                        <div class="fw-semibold small mb-2 d-flex align-items-center gap-2">
+                          <i class="bi bi-geo-alt me-1"></i>Seguimiento
+                          <button type="button" class="btn btn-link btn-sm p-0" title="Actualizar seguimiento" (click)="refrescarTracking(compra)" [disabled]="trackingLoading[compra.id]">
+                            <span *ngIf="!trackingLoading[compra.id]; else loadingSpin"><i class="bi bi-arrow-clockwise"></i></span>
+                            <ng-template #loadingSpin>
+                              <span class="spinner-border spinner-border-sm align-middle" style="width:1em;height:1em;"></span>
+                            </ng-template>
+                          </button>
+                        </div>
+                        <ng-container *ngIf="estaExpandido(compra.id)">
+                          <app-tracking-timeline-wrapper 
+                            *ngIf="getTrackingCodigo(compra) as codigo"
+                            [trackingCodigo]="codigo"
+                            [attr.data-key]="compra.id + '-' + codigo + '-' + (compra._trackingKey || '')">
+                          </app-tracking-timeline-wrapper>
+                        </ng-container>
+                      </div>
+                    </ng-container>
+                    <div class="col-12 col-md-7">
+                      <div class="fw-semibold mis-compras-items-title mb-2">
+                        <i class="bi bi-box-seam me-1"></i>Ticket
+                      </div>
+                      <div class="mis-compras-items-wrapper" [ngClass]="{ 'mis-compras-items-wrapper-scroll': (compra.items?.length || 0) > 10 }">
+                        <table class="table table-sm table-borderless align-middle mb-2 mis-compras-items-table">
+                          <thead class="text-muted">
+                            <tr>
+                              <th>Producto</th>
+                              <th class="text-end">Cant.</th>
+                              <th class="text-end">P. Unit.</th>
+                              <th class="text-end">Subtotal</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr *ngFor="let it of compra.items">
+                              <td>
+                                {{ it?.producto?.nombre || ('#' + (it?.producto?.id || '?')) }}
+                              </td>
+                              <td class="text-end">{{ it?.cantidad }}</td>
+                              <td class="text-end">$ {{ (it?.precioUnitario || 0) | number:'1.2-2' }}</td>
+                              <td class="text-end fw-bold">$ {{ subtotalItem(it) | number:'1.2-2' }}</td>
+                            </tr>
+                          </tbody>
+                     
+                          <tfoot>
+                            <tr>
+                              <td colspan="3" class="text-end small text-muted">Subtotal productos</td>
+                              <td class="text-end small fw-bold">$ {{ subtotalCompra(compra) | number:'1.2-2' }}</td>
+                            </tr>
+                            <tr *ngIf="costoEnvioCompra(compra) > 0">
+                              <td colspan="3" class="text-end small text-muted">Costo de envío</td>
+                              <td class="text-end small fw-bold">$ {{ costoEnvioCompra(compra) | number:'1.2-2' }}</td>
+                            </tr>
+                            <tr>
+                              <td colspan="3" class="text-end small text-muted fw-semibold">Total a pagar</td>
+                              <td class="text-end fw-bold text-success">$ {{ totalFinalCompra(compra) | number:'1.2-2' }}</td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                      <div class="mb-1">
+                        <span class="fw-semibold small"><i class="bi bi-geo-alt me-1"></i>Destino:</span>
+                        <span class="small text-muted" *ngIf="compra.pedidoEnvio?.usuarioDireccion as dir">
+                          <span *ngIf="dir.calle">{{ dir.calle }}</span>
+                          <span *ngIf="dir.numero"> {{ dir.numero }}</span>
+                          <span *ngIf="dir.localidad?.nombre">, {{ dir.localidad?.nombre }}</span>
+                        </span>
+                        <span class="small text-muted" *ngIf="!compra.pedidoEnvio?.usuarioDireccion">-</span>
+                      </div>
+                      <div class="mb-1">
+                        <span class="fw-semibold small"><i class="bi bi-truck me-1"></i>Opción de entrega:</span>
+                        <span class="small text-muted">{{ compra.tipoEntrega || '-' }}</span>
+                      </div>
+                      <div *ngIf="compra.pedidoEnvio?.fechaProgramada as fp" class="small text-muted">
+                        <i class="bi bi-calendar-event me-1"></i> Programado: {{ fp }}
+                        <span *ngIf="compra.pedidoEnvio?.horaVentanaDesde && compra.pedidoEnvio?.horaVentanaHasta">
+                          ({{ compra.pedidoEnvio?.horaVentanaDesde }} - {{ compra.pedidoEnvio?.horaVentanaHasta }})
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Paginado general -->
+            <nav *ngIf="totalPaginas > 1" class="mt-3">
+              <ul class="pagination pagination-sm justify-content-center">
+                <li class="page-item" [class.disabled]="paginaActual === 1">
+                  <button class="page-link" (click)="paginaActual = paginaActual - 1" [disabled]="paginaActual === 1">&laquo;</button>
+                </li>
+                <li class="page-item" *ngFor="let p of [].constructor(totalPaginas); let i = index" [class.active]="paginaActual === i + 1">
+                  <button class="page-link" (click)="paginaActual = i + 1">{{ i + 1 }}</button>
+                </li>
+                <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
+                  <button class="page-link" (click)="paginaActual = paginaActual + 1" [disabled]="paginaActual === totalPaginas">&raquo;</button>
+                </li>
+              </ul>
+            </nav>
+          </ng-container>
+        </ng-container>
+        <ng-template #sinComprasGlobal>
+          <div class="text-center text-muted py-4">
+            <i class="bi bi-bag" style="font-size:2rem;"></i>
+            <div class="mt-2">No encontramos compras con esos filtros.</div>
+          </div>
+        </ng-template>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" (click)="onCerrarMisCompras()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>

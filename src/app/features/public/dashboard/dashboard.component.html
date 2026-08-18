@@ -1,0 +1,374 @@
+<div *ngIf="loadingDashboard" class="global-loading-overlay" aria-live="polite" aria-busy="true">
+  <div class="global-loading-spinner">
+    <div class="spinner-border text-primary" role="status" aria-label="Cargando"></div>
+    <div class="global-loading-message">Cargando productos y promociones...</div>
+  </div>
+</div>
+
+<!-- CARROUSEL DE PROMOCIONES/PRODUCTOS -->
+<ng-container *ngIf="promoSlides && promoSlides.length">
+  <div id="carouselPromos" class="carousel slide mb-5 promo-carousel" data-bs-ride="carousel" data-bs-interval="5000" data-bs-pause="hover">
+    <div class="carousel-inner">
+      <div *ngFor="let slide of promoSlides; let i = index" class="carousel-item" [ngClass]="{active: i === 0}">
+        <ng-container *ngIf="esPromoSlideVideo(slide); else promoSlideImagen">
+          <video
+            [src]="getPromoSlideMediaUrl(slide)"
+            (error)="onPromoImageError(slide)"
+            class="d-block w-100 promo-slide-image promo-slide-video"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="metadata"
+          ></video>
+        </ng-container>
+        <ng-template #promoSlideImagen>
+          <img
+            [src]="getPromoSlideMediaUrl(slide)"
+            (error)="onPromoImageError(slide)"
+            class="d-block w-100 promo-slide-image"
+            [alt]="slide.imagen?.alias || slide.imagen?.nombreOriginal || slide.promo.titulo || slide.promo.nombre || 'Promoción'"
+          >
+        </ng-template>
+      </div>
+    </div>
+
+    <div class="carousel-indicators promo-indicators">
+      <button
+        *ngFor="let slide of promoSlides; let i = index"
+        type="button"
+        data-bs-target="#carouselPromos"
+        [attr.data-bs-slide-to]="i"
+        [class.active]="i === 0"
+        [attr.aria-current]="i === 0 ? 'true' : null"
+        [attr.aria-label]="'Slide ' + (i + 1)"
+      ></button>
+    </div>
+
+    <button class="carousel-control-prev" type="button" data-bs-target="#carouselPromos" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Anterior</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#carouselPromos" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Siguiente</span>
+    </button>
+  </div>
+</ng-container>
+
+<!-- Sección de catálogo de productos eliminada por pedido del usuario -->
+
+<section *ngIf="productosEnOferta && productosEnOferta.length" class="catalogo-section container mb-5">
+  <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+    <h2 class="fw-bold text-dark module-title mb-0"><i class="bi bi-tag-fill me-2"></i>Aprovechá nuestras ofertas !</h2>
+    <app-producto-vista-selector
+      [modoVista]="modoVistaProducto"
+      [mostrarLista]="false"
+      (modoVistaChange)="setModoVistaProducto($event)">
+    </app-producto-vista-selector>
+  </div>
+  <div id="carouselProductosOferta" class="carousel slide ofertas-productos-carousel" data-bs-ride="carousel" data-bs-interval="10000" data-bs-pause="hover">
+    <div class="carousel-inner">
+      <div
+        class="carousel-item"
+        *ngFor="let grupo of productosEnOfertaSlides; let i = index"
+        [ngClass]="{ active: i === 0 }"
+      >
+        <div class="row g-4">
+          <ng-container *ngFor="let producto of grupo; trackBy: trackByProductoId">
+            <div class="col-12 mb-2" *ngIf="modoVistaProducto === 'lista'">
+              <app-producto-item-lista
+                [producto]="producto"
+                (agregar)="agregarCarrito($event)"
+                (verDetalle)="abrirDetalleProducto(producto)">
+              </app-producto-item-lista>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3" *ngIf="modoVistaProducto === 'grande'">
+              <app-producto-item
+                [producto]="producto"
+                [favoritos]="favoritos"
+                [ratings]="ratings"
+                (cardClick)="abrirDetalleProducto(producto)"
+                (toggleFavorito)="toggleFavorito($event.producto, $event.event)"
+                (agregarCarrito)="agregarCarrito($event, producto)"
+                (setRating)="setRating(producto, $event.rating, $event.event)">
+              </app-producto-item>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3" *ngIf="modoVistaProducto === 'compacta'">
+              <app-producto-item-mini
+                [producto]="producto"
+                [favoritos]="favoritos"
+                [ratings]="ratings"
+                [ratingsGlobal]="ratingsGlobal"
+                [setRating]="setRatingMini"
+                (toggleFavorito)="toggleFavorito($event.producto, $event.event)"
+                (agregar)="agregarCarrito($event)">
+              </app-producto-item-mini>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <button
+      *ngIf="(productosEnOfertaSlides.length || 0) > 1"
+      class="carousel-control-prev"
+      type="button"
+      data-bs-target="#carouselProductosOferta"
+      data-bs-slide="prev"
+    >
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Anterior</span>
+    </button>
+    <button
+      *ngIf="(productosEnOfertaSlides.length || 0) > 1"
+      class="carousel-control-next"
+      type="button"
+      data-bs-target="#carouselProductosOferta"
+      data-bs-slide="next"
+    >
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Siguiente</span>
+    </button>
+  </div>
+</section>
+
+<section *ngIf="productosMasVendidos && productosMasVendidos.length" class="catalogo-section container mb-5">
+  <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+    <h2 class="fw-bold module-title mb-0"><i class="bi bi-fire me-2"></i>Más vendidos</h2>
+    <app-producto-vista-selector
+      [modoVista]="modoVistaProducto"
+      [mostrarLista]="false"
+      (modoVistaChange)="setModoVistaProducto($event)">
+    </app-producto-vista-selector>
+  </div>
+  <!-- Selector de vista en resultados de búsqueda -->
+  <section *ngIf="resultadosBusqueda && resultadosBusqueda.length" class="catalogo-section container mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+      <h2 class="fw-bold module-title mb-0"><i class="bi bi-search me-2"></i>Resultados de búsqueda</h2>
+      <app-producto-vista-selector
+        [modoVista]="modoVistaProducto"
+        [mostrarLista]="false"
+        (modoVistaChange)="setModoVistaProducto($event)">
+      </app-producto-vista-selector>
+    </div>
+    <!-- ...renderizado de resultados... -->
+  </section>
+
+  <!-- Selector de vista en productos filtrados por categoría/subrubro -->
+  <section *ngIf="productosFiltrados && productosFiltrados.length && (filtroCategoria || filtroTipo)" class="catalogo-section container mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+      <h2 class="fw-bold module-title mb-0"><i class="bi bi-funnel me-2"></i>Productos filtrados</h2>
+      <app-producto-vista-selector
+        [modoVista]="modoVistaProducto"
+        [mostrarLista]="false"
+        (modoVistaChange)="setModoVistaProducto($event)">
+      </app-producto-vista-selector>
+    </div>
+    <!-- ...renderizado de productos filtrados... -->
+  </section>
+  <div id="carouselMasVendidos" class="carousel slide ofertas-productos-carousel" data-bs-ride="carousel" data-bs-interval="10000" data-bs-pause="hover">
+    <div class="carousel-inner">
+      <div class="carousel-item" *ngFor="let grupo of productosMasVendidosSlides; let i = index" [ngClass]="{ active: i === 0 }">
+        <div class="row g-4">
+          <div class="col-12 col-sm-6 col-md-4 col-lg-3" *ngFor="let producto of grupo; trackBy: trackByProductoId">
+            <ng-container [ngSwitch]="modoVistaProducto">
+              <app-producto-item
+                *ngSwitchCase="'grande'"
+                [producto]="producto"
+                [favoritos]="favoritos"
+                [ratings]="ratings"
+                (cardClick)="abrirDetalleProducto(producto)"
+                (toggleFavorito)="toggleFavorito($event.producto, $event.event)"
+                (agregarCarrito)="agregarCarrito($event, producto)"
+                (setRating)="setRating(producto, $event.rating, $event.event)"
+              ></app-producto-item>
+              <app-producto-item-mini
+                *ngSwitchCase="'compacta'"
+                [producto]="producto"
+                [favoritos]="favoritos"
+                [ratings]="ratings"
+                [ratingsGlobal]="ratingsGlobal"
+                [setRating]="setRatingMini"
+                (toggleFavorito)="toggleFavorito($event.producto, $event.event)"
+                (agregar)="agregarCarrito($event, producto)"
+              ></app-producto-item-mini>
+              <app-producto-item-lista
+                *ngSwitchCase="'lista'"
+                [producto]="producto"
+                (agregar)="agregarCarrito($event, producto)"
+              ></app-producto-item-lista>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button *ngIf="(productosMasVendidosSlides.length || 0) > 1" class="carousel-control-prev" type="button" data-bs-target="#carouselMasVendidos" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Anterior</span>
+    </button>
+    <button *ngIf="(productosMasVendidosSlides.length || 0) > 1" class="carousel-control-next" type="button" data-bs-target="#carouselMasVendidos" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Siguiente</span>
+    </button>
+  </div>
+</section>
+
+<section *ngIf="promocionesVisuales && promocionesVisuales.length" class="container mb-5">
+  <h2 class="mb-4 fw-bold module-title"><i class="bi bi-megaphone-fill me-2"></i>Ofertas del mes</h2>
+  <h2 class="mb-2 fw-bold module-title text-dark"><i class="bi bi-tags-fill me-2"></i>Más ofertas</h2>
+  <div class="mb-3">
+    <app-producto-vista-selector
+      [modoVista]="modoVistaProducto"
+      (modoVistaChange)="setModoVistaProducto($event)">
+    </app-producto-vista-selector>
+  </div>
+  <div class="row g-4">
+    <div class="col-12 col-md-6 col-lg-4" *ngFor="let promo of promocionesVisuales">
+      <div class="card border-0 shadow-sm promo-visual-card" (click)="irAOfertaVisual(promo)">
+        <img *ngIf="promo.imagen" [src]="promo.imagen" [alt]="promo.nombre || 'Oferta del mes'" class="promo-visual-img" (error)="onPromoImageError(promo)" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OFERTAS DESTACADAS -->
+
+<section id="ofertas" *ngIf="promocionesDescuentoSinImagen && promocionesDescuentoSinImagen.length" class="container mt-3 mb-4 ofertas-destacadas-fixed">
+  <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+    <h2 class="mb-4 fw-bold module-title text-dark"><i class="bi bi-tags-fill me-2"></i>Más ofertas</h2>
+    <app-producto-vista-selector
+      [modoVista]="modoVistaProducto"
+      (modoVistaChange)="setModoVistaProducto($event)">
+    </app-producto-vista-selector>
+  </div>
+  <div class="row g-4">
+    <div class="col-12 col-md-6 col-xxl-4" *ngFor="let promo of promocionesDescuentoPaginadas">
+      <div class="card oferta-card border-2 border-success h-100 shadow-sm" (click)="irAOfertaVisual(promo)">
+        <div class="card-header bg-success bg-gradient text-white text-center fw-bold fs-5">
+          {{ promo.nombre || 'Promoción' }}
+        </div>
+        <div class="card-body">
+          <p class="card-text text-dark mb-2">{{ promo.descripcion || '' }}</p>
+          <div class="mb-2">
+            <span class="badge bg-info" *ngIf="getPromoFechaInicio(promo) || getPromoFechaFin(promo); else sinVigenciaPromo">
+              Vigencia:
+              <span *ngIf="getPromoFechaInicio(promo)">{{ getPromoFechaInicio(promo) | date:'dd/MM/yyyy' }}</span>
+              <span *ngIf="getPromoFechaInicio(promo) && getPromoFechaFin(promo)"> - </span>
+              <span *ngIf="getPromoFechaFin(promo)">{{ getPromoFechaFin(promo) | date:'dd/MM/yyyy' }}</span>
+            </span>
+            <ng-template #sinVigenciaPromo>
+              <span class="badge bg-secondary">Vigencia no informada</span>
+            </ng-template>
+          </div>
+          <div *ngIf="promo.productos && promo.productos.length">
+            <div class="mb-2 fw-bold text-primary">Productos incluidos:</div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item py-2 px-1" *ngFor="let prod of getProductosPromoPaginados(promo)">
+                <ng-container [ngSwitch]="modoVistaProducto">
+                  <app-producto-item-lista
+                    *ngSwitchCase="'lista'"
+                    [producto]="prod"
+                    (agregar)="agregarPromoAlCarrito($event, promo)"
+                    (verDetalle)="abrirDetalleProducto(prod)"
+                  ></app-producto-item-lista>
+                  <ng-container *ngSwitchDefault>
+                    <div class="d-flex align-items-center gap-2">
+                      <img
+                        *ngIf="tieneImagenProducto(prod)"
+                        [src]="getProductoImagen(prod)"
+                        [alt]="prod.nombre || 'Producto'"
+                        class="oferta-item-thumb"
+                        (error)="onProductoImageError(prod, $event)"
+                      />
+                      <div>
+                        <span class="fw-bold">{{ prod.nombre }}</span>
+                        <span *ngIf="getMarcaNombre(prod)" class="badge bg-light text-dark ms-2">Marca: {{ getMarcaNombre(prod) }}</span>
+                        <ng-container *ngIf="prod.precioDescuento && prod.precioDescuento !== prod.precio_lista">
+                          <span class="text-muted text-decoration-line-through ms-2" style="font-size: 0.95em;">
+                            ${{ prod.precio_lista | number:'1.2-2' }}
+                          </span>
+                          <span class="fw-bold text-success ms-2">
+                            ${{ prod.precioDescuento | number:'1.2-2' }}
+                          </span>
+                        </ng-container>
+                        <ng-container *ngIf="!prod.precioDescuento || prod.precioDescuento === prod.precio_lista">
+                          <span class="fw-bold text-success ms-2">
+                            ${{ prod.precio_lista | number:'1.2-2' }}
+                          </span>
+                        </ng-container>
+                      </div>
+                    </div>
+                    <button class="btn btn-outline-success btn-sm ms-2" title="Agregar al carrito" (click)="agregarPromoAlCarrito(prod, promo, $event)">
+                      <i class="bi bi-cart-plus"></i>
+                    </button>
+                  </ng-container>
+                </ng-container>
+              </li>
+            </ul>
+
+            <nav *ngIf="(promo.productos.length || 0) > promoProductosPorPagina" class="mt-2 d-flex justify-content-center" aria-label="Paginación de productos de oferta">
+              <ul class="pagination pagination-sm mb-0">
+                <li class="page-item" *ngFor="let pagina of getPaginasProductosPromo(promo)" [ngClass]="{ active: pagina === getPaginaActualProductosPromo(promo) }">
+                  <button class="page-link" type="button" (click)="cambiarPaginaProductosPromo(promo, pagina, $event)">{{ pagina }}</button>
+                </li>
+              </ul>
+            </nav>
+          </div>
+          <div *ngIf="promo.tarjetas && promo.tarjetas.length">
+            <div class="mt-2 text-secondary">Tarjetas asociadas:</div>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item py-1 px-1" *ngFor="let tarjeta of promo.tarjetas">
+                <i class="bi bi-credit-card-2-front me-1 text-info"></i>{{ tarjeta.nombre }}
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav *ngIf="(promocionesDescuentoSinImagen.length || 0) > promocionesDescuentoPorPagina" class="mt-4 d-flex justify-content-center" aria-label="Paginación de ofertas destacadas">
+    <ul class="pagination pagination-sm mb-0">
+      <li class="page-item" *ngFor="let pagina of paginasPromocionesDescuento" [ngClass]="{ active: pagina === promocionesDescuentoPaginaActual }">
+        <button class="page-link" type="button" (click)="cambiarPaginaPromocionesDescuento(pagina)">{{ pagina }}</button>
+      </li>
+    </ul>
+  </nav>
+</section>
+
+<section class="container mb-5">
+  <div class="beneficios-grid row g-3">
+    <div class="col-12 col-sm-6 col-lg-3" *ngFor="let item of beneficiosNegocio">
+      <div class="card h-100 border-0 shadow-sm beneficio-card">
+        <div class="card-body text-center py-4">
+          <i class="bi {{ item.icono }} beneficio-icon mb-2"></i>
+          <h6 class="fw-bold mb-1">{{ item.titulo }}</h6>
+          <p class="text-muted small mb-0">{{ item.texto }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<app-producto-detalle-modal
+  [selectedProducto]="selectedProducto"
+  [mainImageUrl]="getImagenPrincipalModal(selectedProducto)"
+  [galeriaModal]="getGaleriaModal(selectedProducto)"
+  [productosRelacionados]="productosRelacionadosModal"
+  [cantidadAgregar]="cantidadAgregar"
+  [errorCarrito]="errorCarrito"
+  (cantidadAgregarChange)="cantidadAgregar = $event"
+  (seleccionarImagen)="seleccionarImagenModal($event)"
+  (seleccionarRelacionado)="seleccionarProductoRelacionado($event)"
+  (agregarRelacionado)="agregarRelacionadoAlCarritoDesdeModal($event)"
+  (agregarPrincipal)="agregarAlCarrito()"
+  (cerrar)="cerrarDetalleProducto()"
+></app-producto-detalle-modal>
+
+<!-- MENSUAL DE SERVICIO NO DISPONIBLE -->
+<section *ngIf="servicioOffline" class="alert alert-danger text-center mt-4">
+  <i class="bi bi-exclamation-triangle-fill me-2"></i>
+  Servicio no disponible por el momento, disculpe las molestias ocasionadas. Intente más tarde.
+</section>

@@ -1,0 +1,809 @@
+<header class="layout-header sticky-top">
+  <nav class="dashboard-header navbar navbar-expand-lg navbar-light bg-white">
+    <div class="container layout-nav-container d-flex flex-column align-items-stretch">
+      <div class="d-flex align-items-start justify-content-between top-row">
+      <a class="navbar-brand d-flex align-items-center" routerLink="/dashboard" (click)="volverInicioDashboard($event)">
+        <img [src]="appLogo" alt="Logo App" class="layout-brand-logo d-inline-block align-text-top">
+      </a>
+
+      <form class="d-flex mx-auto align-items-center position-relative layout-search" (submit)="$event.preventDefault(); buscarProductos();">
+        <input class="form-control me-2" type="search" placeholder="Buscar productos..." aria-label="Buscar" [(ngModel)]="busquedaNombre" name="busquedaNombreLayout" (input)="buscarProductos()" autocomplete="off">
+        <button class="btn btn-outline-primary me-2 nav-icon-btn" type="submit"><i class="bi bi-search"></i></button>
+
+        <div class="position-absolute w-100 search-results" *ngIf="resultadosBusqueda && resultadosBusqueda.length">
+          <ul class="list-group shadow">
+            <li class="list-group-item list-group-item-action" *ngFor="let prod of resultadosBusqueda" (click)="irAProducto(prod)" style="cursor:pointer;">
+              <span class="fw-bold">{{ prod.nombre }}</span>
+              <span *ngIf="getMarcaNombre(prod)" class="fw-bold"> ({{ getMarcaNombre(prod) }})</span>
+              <span *ngIf="prod.subrubro"> / <span class="text-info">{{ prod.subrubro.nombre }}</span></span>
+            </li>
+          </ul>
+        </div>
+        <!-- ...existing code... -->
+
+        <select class="form-select app-select" [disabled]="!(empresa?.apps?.length) || (empresa?.apps?.length ?? 0) === 1" [(ngModel)]="selectedAppId" (ngModelChange)="aplicarTemaGlobal()" name="selectedAppIdLayout" [ngModelOptions]="{standalone: true}">
+          <option *ngFor="let app of (empresa?.apps || [])" [ngValue]="app.id">{{ app.nombre }}</option>
+          <option *ngIf="!empresa?.apps?.length || !selectedAppId" [ngValue]="null" disabled selected>Seleccione una app</option>
+        </select>
+      </form>
+
+      <div class="d-flex align-items-center gap-2 ms-auto">
+        <button class="btn btn-outline-secondary nav-icon-btn" type="button" data-bs-toggle="modal" data-bs-target="#notificacionesModalGlobal">
+          <i class="bi bi-bell" style="font-size:1.1rem;"></i>
+        </button>
+
+        <!-- Ícono Mis Compras con badge -->
+        <button class="btn btn-outline-secondary nav-icon-btn position-relative" type="button"
+                (click)="abrirModalMisCompras()" title="Mis compras">
+          <i class="bi bi-bag-check fs-5"></i>
+          <ng-container *ngIf="misComprasCount$ | async as count">
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success" [hidden]="!count">
+              {{ count }}
+            </span>
+          </ng-container>
+        </button>
+
+        <ng-container *ngIf="carritoService.items$ | async as items">
+          <button
+            class="btn btn-outline-secondary position-relative nav-icon-btn"
+            type="button"
+            [attr.data-bs-toggle]="items?.length ? 'offcanvas' : null"
+            [attr.data-bs-target]="items?.length ? '#carritoOffcanvasGlobal' : null"
+            [attr.aria-controls]="items?.length ? 'carritoOffcanvasGlobal' : null"
+            [disabled]="!(items?.length)"
+          >
+            <i class="bi bi-cart3 fs-5"></i>
+            <span *ngIf="items?.length" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+              {{ items.length }}
+            </span>
+          </button>
+        </ng-container>
+
+        <div class="dropdown">
+          <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="layoutUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person-fill fs-4 me-2"></i>
+            <span class="fw-bold">{{ usuario?.nombre ? usuario.nombre + (usuario.apellido ? ' ' + usuario.apellido : '') : 'Usuario' }}</span>
+            <span class="badge bg-primary ms-2">{{ usuario?.rol && usuario.rol.nombre ? usuario.rol.nombre : 'usuario' }}</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="layoutUserDropdown">
+            <li>
+              <h6 class="dropdown-header">
+                {{ usuario?.nombre ? usuario.nombre + (usuario.apellido ? ' ' + usuario.apellido : '') : 'Usuario' }}
+                <br><small class="text-muted">{{ usuario?.rol && usuario.rol.alias ? usuario.rol.alias : 'usuario' }}</small>
+              </h6>
+            </li>
+            <li><a class="dropdown-item" routerLink="/dashboard">Mi cuenta</a></li>
+            <li><a class="dropdown-item" routerLink="/dashboard">Configuración</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="#" (click)="$event.preventDefault(); cerrarSesion()">Cerrar sesión</a></li>
+          </ul>
+        </div>
+      </div>
+      <!-- Modal Mis Compras -->
+      <app-mis-compras-modal #modalMisCompras [appId]="appIdOperativo" [usuarioId]="usuarioId"></app-mis-compras-modal>
+      </div>
+
+      <div class="nav-categories-row mt-0 d-flex justify-content-between align-items-center">
+        <ul class="nav nav-pills justify-content-start gap-2 flex-wrap mb-0">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle nav-categorias" href="#" id="categoriasDropdownGlobal" role="button" data-bs-toggle="dropdown" aria-expanded="false" (click)="onCategoriasMenuClick()">
+              <i class="bi bi-list-ul me-1"></i> Categorías
+            </a>
+            <ul class="dropdown-menu shadow" aria-labelledby="categoriasDropdownGlobal">
+              <li>
+                <a class="dropdown-item fw-semibold" routerLink="/todos-los-productos" (click)="onSubrubroClick($event)">
+                  <i class="bi bi-grid-3x3-gap me-1 text-primary"></i> TODOS
+                </a>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <ng-container *ngFor="let categoria of categorias">
+                <ng-container *ngTemplateOutlet="categoriaMenuRecursivo; context: { $implicit: categoria }"></ng-container>
+              </ng-container>
+            <!-- Template recursivo para categorías y subcategorías -->
+            <ng-template #categoriaMenuRecursivo let-cat>
+              <li *ngIf="cat.children && cat.children.length > 0" class="dropdown-submenu position-relative">
+                <a class="dropdown-item d-flex align-items-center justify-content-between" href="#">
+                  <span><i class="bi bi-tag me-1 text-primary"></i> {{ cat.nombre }}</span>
+                  <i class="bi bi-chevron-right small ms-2"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-submenu-menu shadow">
+                  <ng-container *ngFor="let sub of cat.children">
+                    <ng-container *ngTemplateOutlet="categoriaMenuRecursivo; context: { $implicit: sub }"></ng-container>
+                  </ng-container>
+                </ul>
+              </li>
+              <li *ngIf="!cat.children || cat.children.length === 0">
+                <a class="dropdown-item" [routerLink]="['/categorias', slugify(cat.nombre)]">
+                  <i class="bi bi-chevron-double-right me-1 text-info"></i> {{ cat.nombre }}
+                </a>
+              </li>
+            </ng-template>
+            </ul>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-ofertas" routerLink="/productos-en-oferta">
+              <i class="bi bi-lightning-charge-fill text-warning me-1"></i> Ofertas
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link position-relative" [routerLink]="['/favoritos']">
+              <i class="bi bi-heart-fill text-danger me-1"></i> Favoritos
+              <span *ngIf="favoritosCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                {{ favoritosCount }}
+              </span>
+            </a>
+          </li>
+        </ul>
+       
+        <!-- Menú administración, solo si hay permisos de menú -->
+        <div *ngIf="adminPerms && adminPerms.length > 0" class="dropdown ms-auto">
+          <button class="btn btn-outline-secondary nav-icon-btn d-flex align-items-center" type="button" id="adminMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Administración">
+            <i class="bi bi-gear-fill fs-5"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminMenuDropdown">
+          
+            <li *ngFor="let perm of adminPerms">
+              <a class="dropdown-item d-flex align-items-center gap-2" [routerLink]="perm.router || perm.route || '/admin'">
+                <i *ngIf="perm.icon" class="bi {{ perm.icon }}"></i>
+                <span>{{ perm.label || perm.nombre || perm.alias }}</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+</header>
+
+<div *ngIf="mostrarBreadcrumb" class="layout-breadcrumb-wrap">
+  <div class="container">
+    <nav aria-label="breadcrumb" class="py-2">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item"><a routerLink="/dashboard">Inicio</a></li>
+        <li
+          *ngFor="let item of breadcrumbItems; let last = last"
+          class="breadcrumb-item"
+          [class.active]="last"
+          [attr.aria-current]="last ? 'page' : null"
+        >
+          <a *ngIf="!last" [routerLink]="item.url">{{ item.label }}</a>
+          <span *ngIf="last">{{ item.label }}</span>
+        </li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<main class="layout-content">
+  <router-outlet></router-outlet>
+</main>
+
+<div class="modal fade" id="notificacionesModalGlobal" tabindex="-1" aria-labelledby="notificacionesModalGlobalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="notificacionesModalGlobalLabel"><i class="bi bi-bell me-2 text-warning"></i> Notificaciones</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body p-0">
+        <ng-container *ngIf="notificaciones && notificaciones.length > 0; else sinNotificacionesGlobal">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item" *ngFor="let noti of notificaciones">
+              {{ noti.mensaje }}
+            </li>
+          </ul>
+        </ng-container>
+        <ng-template #sinNotificacionesGlobal>
+          <div class="text-center text-muted py-4">
+            <div>No tienes notificaciones.</div>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  class="offcanvas offcanvas-end fade carrito-offcanvas"
+  tabindex="-1"
+  id="carritoOffcanvasGlobal"
+  aria-labelledby="carritoOffcanvasGlobalLabel"
+>
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title fw-bold" id="carritoOffcanvasGlobalLabel">Resumen de su compra</h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column gap-3">
+    <ng-container *ngIf="(carritoService.items$ | async) as items">
+      <ng-container *ngIf="items.length; else carritoVacio">
+        <section class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <h5 class="mb-0"><i class="bi bi-box-seam me-2 text-primary"></i>Productos y precios</h5>
+              <button *ngIf="items.length" class="btn btn-sm btn-text text-dark" type="button" (click)="vaciarCarrito()" style="text-decoration:none;" [disabled]="entregaConfirmada">
+                <i class="bi bi-trash3 me-1"></i> Vaciar carrito
+              </button>
+            </div>
+            <div class="card-body">
+              <div *ngFor="let item of items" class="card border-0 border-bottom pb-3 mb-3">
+                <div class="card-body p-0">
+                  <div class="d-flex align-items-start gap-3">
+                    <img [src]="item.producto.imagen || 'https://via.placeholder.com/72x72?text=Prod'" class="rounded" style="width:72px;height:72px;object-fit:cover;">
+                    <div class="flex-grow-1">
+                      <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div class="flex-grow-1">
+                          <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <h6 class="fw-bold mb-0">{{ item.producto.nombre }}</h6>
+                            <ng-container *ngIf="item.producto.modeloImputacion?.length">
+                              <div class="position-relative d-inline-flex align-items-center">
+                                <!--<button
+                                  class="btn btn-sm rounded-circle carrito-impuestos-toggle"
+                                  type="button"
+                                  (click)="onToggleImpuestos(item, $event)"
+                                  [title]="item.showCargos ? 'Ocultar impuestos' : 'Ver impuestos e IVA'"
+                                  [attr.aria-label]="item.showCargos ? 'Ocultar impuestos' : 'Ver impuestos e IVA'"
+                                  [disabled]="entregaConfirmada"
+                                >
+                                  <i class="bi bi-info-circle-fill"></i>
+                                  <span class="visually-hidden">{{ item.showCargos ? 'Ocultar impuestos' : 'Ver impuestos e IVA' }}</span>
+                                </button>
+                                <div
+                                  *ngIf="item.showCargos"
+                                  class="carrito-impuestos-popover"
+                                  role="dialog"
+                                  aria-live="polite"
+                                  (click)="$event.stopPropagation()"
+                                >
+                                  <div class="fw-semibold small mb-1">Detalle de impuestos</div>
+                                  <div class="small">Precio base: ${{ item.producto.precio_base ?? item.producto.precio | number:'1.2-2' }}</div>
+                                  <ul class="mb-0 mt-2 ps-3 small">
+                                    <li *ngFor="let imp of item.producto.modeloImputacion">
+                                      <ng-container *ngIf="imp.aplica === 'items'">
+                                        {{ imp.nombre }}
+                                        ({{ imp.tipo === 'porcentaje' ? '%' + imp.valor : '$' + imp.valor }}) ·
+                                        ${{ getImputacionMonto(item, imp) | number:'1.2-2' }}
+                                      </ng-container>
+                                    </li>
+                                  </ul>
+                                </div>-->
+                              </div>
+                            </ng-container>
+                          </div>
+                          <div class="small text-success fw-bold" *ngIf="!esStockAgotado(item.producto.stock); else sinStock">Stock: {{ item.producto.stock ?? 'Sin dato' }}</div>
+                          <ng-template #sinStock>
+                            <div class="small fw-bold"></div>
+                          </ng-template>
+                          <div class="small text-dark">
+                            <ng-container *ngIf="esPromoXPorY(item)">
+                              <ng-container *ngIf="item.cantidad >= (getUmbralPromoXPorY(item) ?? 0); else soloPrecioPromoXPorY">
+                                <div>
+                                  <span class="text-danger text-decoration-line-through fw-bold me-2">Precio regular: ${{ item.producto.precio | number:'1.2-2' }}</span>
+                                </div>
+                                <div>
+                                  <span class="fw-bold text-success">Precio promo: ${{ getPrecioPromoXPorY(item) | number:'1.2-2' }}</span>
+                                  <span class="text-secondary ms-1" style="font-size: 0.95rem; font-weight: normal;">C/U por unidad</span>
+                                </div>
+                                <div class="text-success small mt-1">
+                                  <i class="bi bi-star-fill me-1" style="font-size:0.95em; color:gold;"></i>
+                                  {{ getNombrePromoXPorY(item) }}
+                                </div>
+                              </ng-container>
+                              <ng-template #soloPrecioPromoXPorY>
+                                <div>Precio regular: <strong>${{ item.producto.precio | number:'1.2-2' }}</strong></div>
+                                <div class="text-success small mt-1">
+                                  <i class="bi bi-star-fill me-1" style="font-size:0.95em; color:gold;"></i>
+                                  {{ getNombrePromoXPorY(item) }}
+                                </div>
+                              </ng-template>
+                            </ng-container>
+                            <ng-container *ngIf="!esPromoXPorY(item)">
+                              <ng-container *ngIf="item.producto.promociones && item.producto.promociones.length > 0 && item.producto.precioDescuento; else soloPrecioSinPromo">
+                                <div>Precio: <span class="text-decoration-line-through text-danger">${{ item.producto.precio | number:'1.2-2' }}</span></div>
+                                <div>Precio con descuento: <strong>${{ item.producto.precioDescuento | number:'1.2-2' }}</strong></div>
+                              </ng-container>
+                              <ng-template #soloPrecioSinPromo>
+                                <div>Precio: <strong>${{ item.producto.precio | number:'1.2-2' }}</strong></div>
+                              </ng-template>
+                              <div *ngIf="item.producto.promociones && item.producto.promociones.length > 0 && item.producto.promociones[0].descripcion" class="text-success small mt-1">
+                                <i class="bi bi-star-fill me-1" style="font-size:0.95em; color:gold;"></i>{{ item.producto.promociones[0].descripcion }}
+                              </div>
+                            </ng-container>
+                          </div>
+                        </div>
+                        <button class="btn btn-sm btn-link text-dark p-0" type="button" (click)="eliminarItemCarrito(item)" [disabled]="entregaConfirmada">
+                          <i class="bi bi-trash fs-5"></i>
+                        </button>
+                      </div>
+                      <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
+                        <div class="btn-group btn-group-sm" role="group">
+                          <button
+                            class="btn btn-outline-secondary"
+                            type="button"
+                            (click)="decrementarCantidad(item)"
+                            [disabled]="item.cantidad <= 1 || esStockAgotado(item.producto.stock) || entregaConfirmada"
+                          >
+                            -
+                          </button>
+                          <span class="btn btn-outline-secondary disabled">{{ item.cantidad }}u</span>
+                          <button
+                            class="btn btn-outline-secondary"
+                            type="button"
+                            (click)="incrementarCantidad(item)"
+                            [disabled]="esStockAgotado(item.producto.stock) || entregaConfirmada"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <div
+                          class="ms-auto fw-semibold"
+                          [ngClass]="{ 'text-decoration-line-through text-danger opacity-75': esStockAgotado(item.producto.stock) }"
+                        >
+                          <span *ngIf="esPromoXPorY(item)" class="text-success me-1">{{ getFormatoPromoXPorY(item) }}</span>
+                          ${{ (esPromoXPorY(item) ? getTotalPromoCantidadCarrito(item) : (((item.producto.precioDescuento ?? getPrecioUnitarioCarrito(item))) * item.cantidad)) | number:'1.2-2' }}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mt-2">
+                <span class="text-muted">Ahorro acumulado</span>
+                <span class="fw-bold text-success">${{ getAhorroTotal(items) | number:'1.2-2' }}</span>
+              </div>
+            </div>
+        </section>
+      </ng-container>
+      <ng-template #carritoVacio>
+        <div class="alert alert-info mb-0">El carrito está vacío.</div>
+      </ng-template>
+
+      <section class="card shadow-sm" *ngIf="items.length">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-receipt me-2 text-success"></i>Totales, impuestos y cupones</h5>
+          </div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between small" style="font-size:0.95em; margin-top:0.80rem;">
+              <span><strong>Subtotal:</strong></span>
+              <span><strong>${{ carritoService.total | number:'1.2-2' }}</strong> </span>
+            </div>
+            <hr>
+            <div class="mb-2" *ngFor="let imp of getImpuestosGeneralesSobreSubtotal(carritoService.total)">
+              <div class="d-flex justify-content-between small">
+                <span><i class="bi bi-dot"></i> {{ imp.nombre }} <ng-container *ngIf="imp.tipo === 'porcentaje'">(% {{ imp.valor }})</ng-container></span>
+                <span>${{ imp.importe | number:'1.2-2' }}</span>
+              </div>
+            </div>
+            <!-- Impuestos agrupados por tipo de items del carrito -->
+            <ng-container *ngIf="carritoService.items.length">
+              <ng-container *ngIf="getImputacionesResumen(carritoService.items) as imputaciones">
+                <ng-container *ngIf="imputaciones.length > 0">
+                  <div class="mb-1 mt-2">
+                    <span class="fw-semibold text-dark small"><i class="bi bi-receipt-cutoff me-1"></i>Impuestos a productos</span>
+                  </div>
+                  <!-- DEBUG: Mostrar la lista JSON de imputaciones -->
+                  
+                  <div *ngFor="let imp of imputaciones" class="d-flex justify-content-between mb-1 align-items-center">
+                    <span class="d-flex justify-content-between small">
+                      <i class="bi bi-dot"></i>{{ imp.nombre }}
+                      <ng-container *ngIf="imp.valor != null"> <span class="text-secondary">(% {{ imp.valor }})</span></ng-container>
+                    </span>
+                    <span class="d-flex justify-content-between small">${{ imp.importe | number:'1.2-2' }}</span>
+                  </div>
+                </ng-container>
+              </ng-container>
+            </ng-container>
+            <div class="d-flex justify-content-between small mt-2">
+              <span>Costo Envío</span>
+              <span>{{ cotizacion ? ('$' + (cotizacion.costo | number:'1.2-2')) : 'Pendiente' }}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center fw-semibold fs-5 border-top pt-2 mt-2">
+              <span>Total estimado</span>
+              <span>${{ getTotalEstimado() | number:'1.2-2' }}</span>
+            </div>
+            <div class="row g-2 mt-3">
+           <!--   <div class="col-12">
+                <label class="form-label small fw-semibold">Cupón</label>
+                <input class="form-control" type="text" [(ngModel)]="cuponCodigo" name="cuponCodigoLayout" placeholder="Ej: BIENVENIDA10" [disabled]="entregaConfirmada" />
+              </div>-->
+              <div class="col-12">
+                <label class="form-label small fw-semibold">Nota para la tienda</label>
+                <textarea class="form-control" rows="2" [(ngModel)]="notaPedido" name="notaPedidoLayout" placeholder="Instrucciones adicionales, referencias, etc." [disabled]="entregaConfirmada"></textarea>
+              </div>
+            </div>
+          </div>
+      </section>
+
+      <section class="card shadow-sm" *ngIf="items.length">
+          <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0"><i class="bi bi-truck-front me-2 text-info"></i>Entrega o retiro</h5>
+             <button class="btn btn-sm btn-outline-primary" type="button" (click)="toggleFormularioDireccion()" [disabled]="!usuarioId || !appIdOperativo || entregaConfirmada">
+                {{ mostrarFormularioDireccion ? 'Cerrar formulario' : 'Agregar dirección' }}
+            </button>
+          </div>
+          <div class="card-body" [class.disabled-section]="entregaConfirmada">
+          <div *ngIf="!usuarioId" class="alert alert-warning">Inicia sesión para gestionar tus direcciones y cotizar envíos.</div>
+          <div *ngIf="usuarioId && !appIdOperativo" class="alert alert-info">Selecciona una app para calcular logística y costos.</div>
+          <ng-container *ngIf="usuarioId && appIdOperativo">
+            <div *ngIf="direccionError" class="alert alert-danger">{{ direccionError }}</div>
+            <div *ngIf="loadingDirecciones" class="text-muted">Cargando direcciones...</div>
+            <div *ngIf="!loadingDirecciones && direcciones.length" class="list-group mb-3">
+                <label class="list-group-item direccion-item d-flex align-items-start gap-3" *ngFor="let direccion of direcciones">
+                  <input class="form-check-input mt-1" type="radio" name="direccionSeleccionadaOffcanvas"
+                    [value]="direccion.id"
+                    [checked]="selectedDireccionId === direccion.id && selectedEntregaOpcionId !== null"
+                    (change)="seleccionarDireccion(direccion)" [disabled]="entregaConfirmada" />
+                <div class="flex-grow-1 direccion-info">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="fw-semibold">{{ direccion.alias || 'Sin alias' }}</span>
+                    <span *ngIf="direccion.esPrincipal" class="badge bg-primary-subtle text-primary">Principal</span>
+                  </div>
+                  <div class="small text-muted">
+                    {{ direccion.calle }} {{ direccion.numero || '' }}
+                    <span *ngIf="direccion.localidad?.nombre"> - {{ direccion.localidad?.nombre }}</span>
+                  </div>
+                </div>
+                <div class="direccion-actions d-flex align-items-center">
+                    <button
+                      class="btn btn-sm direccion-action-btn"
+                      type="button"
+                      (click)="$event.stopPropagation(); establecerPrincipal(direccion)"
+                      [disabled]="direccion.esPrincipal || entregaConfirmada"
+                      [title]="direccion.esPrincipal ? 'Ya es principal' : 'Marcar como principal'"
+                      [attr.aria-label]="direccion.esPrincipal ? 'Ya es principal' : 'Marcar como principal'"
+                    >
+                      <i class="bi" [ngClass]="direccion.esPrincipal ? 'bi-bookmark-check-fill text-primary' : 'bi-bookmark-plus'"></i>
+                      <span class="visually-hidden">{{ direccion.esPrincipal ? 'Dirección principal' : 'Marcar como principal' }}</span>
+                    </button>
+                    <button
+                      class="btn btn-sm direccion-action-btn text-danger"
+                      type="button"
+                      (click)="$event.stopPropagation(); eliminarDireccion(direccion)"
+                      title="Eliminar dirección"
+                      aria-label="Eliminar dirección"
+                      [disabled]="entregaConfirmada"
+                    >
+                      <i class="bi bi-trash"></i>
+                      <span class="visually-hidden">Eliminar dirección</span>
+                    </button>
+                </div>
+              </label>
+            </div>
+            <div *ngIf="!loadingDirecciones && !direcciones.length" class="alert alert-info">
+              Aún no tienes direcciones guardadas. Crea una nueva para continuar.
+            </div>
+
+             <form *ngIf="mostrarFormularioDireccion" class="border rounded p-3 mb-3" [formGroup]="direccionForm"
+        (ngSubmit)="guardarDireccion()">
+        <div class="row g-2">
+          <div class="col-md-12">
+            <label class="form-label small">Alias</label>
+            <input type="text" class="form-control" formControlName="alias" placeholder="Casa, oficina..." />
+          </div>
+          <div class="col-md-8">
+            <label class="form-label small">Calle *</label>
+            <input type="text" class="form-control" formControlName="calle"
+              [class.is-invalid]="direccionForm.get('calle')?.touched && direccionForm.get('calle')?.invalid" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">Número</label>
+            <input type="text" class="form-control" formControlName="numero" />
+          </div>
+          <div class="col-md-8 position-relative">
+            <label class="form-label small">Localidad *</label>
+            <input type="text" class="form-control" placeholder="Buscar localidad..." autocomplete="off"
+              [formControl]="localidadBusquedaControl" (input)="onLocalidadBusquedaInput($any($event.target).value)"
+              (focus)="onLocalidadInputFocus()" (blur)="onLocalidadInputBlur()"
+              [class.is-invalid]="(direccionForm.get('localidadId')?.touched && direccionForm.get('localidadId')?.invalid) || !!localidadBusquedaError" />
+            <div class="dropdown-menu show localidad-autocomplete w-100 shadow-sm"
+              *ngIf="mostrarLocalidadDropdown && localidadesSugeridas.length">
+              <button type="button" class="dropdown-item text-start py-2" *ngFor="let loc of localidadesSugeridas"
+                (mousedown)="onSeleccionarLocalidad(loc)">
+                <div class="fw-semibold" style="font-size: 0.92rem;">{{ loc.nombre }}</div>
+                <small class="text-muted d-block" style="font-size: 0.8rem;">
+                  CP {{ loc.codigoPostal || 's/d' }}
+                  <span *ngIf="loc.provincia?.nombre"> - {{ loc.provincia?.nombre }}</span>
+                </small>
+              </button>
+            </div>
+            <div class="form-text" *ngIf="localidadBusquedaLoading">Buscando localidades...</div>
+            <div class="form-text text-muted"
+              *ngIf="!localidadBusquedaLoading && !localidadBusquedaError && !localidadesSugeridas.length">
+              No encontramos coincidencias.
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="localidadBusquedaError">{{ localidadBusquedaError }}</div>
+            <div class="invalid-feedback d-block"
+              *ngIf="!localidadBusquedaError && direccionForm.get('localidadId')?.touched && direccionForm.get('localidadId')?.invalid">
+              Seleccioná una localidad válida.
+            </div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">Código Postal</label>
+            <input type="text" class="form-control" formControlName="codigoPostal" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Nombre del receptor</label>
+            <input type="text" class="form-control" formControlName="receptorNombre" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Teléfono del receptor</label>
+            <input type="text" class="form-control" formControlName="receptorTelefono" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Entre calles</label>
+            <input type="text" class="form-control" formControlName="entreCalles" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Referencia</label>
+            <input type="text" class="form-control" formControlName="referencia" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">Precisión</label>
+            <select class="form-select" formControlName="precisionGeo">
+              <option *ngFor="let opcion of precisionGeoOptions" [value]="opcion">{{ opcion }}</option>
+            </select>
+          </div>
+          <div class="col-md-4 d-flex align-items-center gap-2">
+            <input type="checkbox" class="form-check-input" id="direccionPrincipalLayout"
+              formControlName="esPrincipal" />
+            <label class="form-check-label" for="direccionPrincipalLayout">Principal</label>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-3">
+          <button class="btn btn-outline-secondary" type="button"
+            (click)="toggleFormularioDireccion()">Cancelar</button>
+          <button class="btn btn-primary" type="submit">Guardar dirección</button>
+        </div>
+      </form>
+
+             <div class="mt-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+            <h6 class="mb-0">Métodos disponibles</h6>
+            <select #entregaTipoSelect class="form-select form-select-sm w-auto"
+               (change)="onFiltroTipoChange(entregaTipoSelect.value)" [disabled]="!entregaTipos.length || entregaConfirmada">
+              <option value="todos">Todos los tipos</option>
+              <option *ngFor="let tipo of entregaTipos" [value]="tipo.id">{{ tipo.nombre }}</option>
+            </select>
+        </div>
+        <div *ngIf="!selectedDireccionId" class="alert alert-info">Selecciona o crea una dirección para ver las
+          opciones.</div>
+        <ng-container *ngIf="selectedDireccionId">
+          <div *ngIf="entregaError" class="alert alert-danger">
+            <div>{{ entregaError }}</div>
+            <button *ngIf="mostrarCtaOrigenEnvio" class="btn btn-sm btn-outline-light mt-2" type="button"
+              (click)="irAConfigOrigenEnvio()">
+              Configurar origen de envío
+            </button>
+          </div>
+          <div *ngIf="entregaLoading" class="text-muted">Buscando opciones para tu zona...</div>
+
+          
+          <div *ngIf="!entregaLoading && entregaOpciones.length" class="list-group">
+              <label class="list-group-item d-flex gap-3 align-items-start position-relative" *ngFor="let opcion of entregaOpciones">
+                <input class="form-check-input mt-1" type="radio" name="entregaOpcionOffcanvas" [value]="opcion.id"
+                  [checked]="selectedEntregaOpcionId === opcion.id" (change)="seleccionarEntregaOpcion(opcion)" [disabled]="entregaConfirmada" />
+                <div class="flex-grow-1">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="fw-semibold">{{ opcion.nombre }}</span>
+                    <span class="badge bg-light text-secondary" *ngIf="opcion.entregaTipo?.nombre">{{ opcion.entregaTipo?.nombre }}</span>
+                  </div>
+                  <div class="small text-muted">{{ opcion.descripcion || 'Sin descripción disponible' }}</div>
+                  <!-- Inputs de programación solo se muestran en la sección de cotización, no aquí -->
+                </div>
+              </label>
+          </div>
+          <div *ngIf="!entregaLoading && !entregaOpciones.length" class="alert alert-warning">No encontramos métodos
+            disponibles para esta localidad.</div>
+          <div *ngIf="cotizacion" class="alert alert-success mt-3 mb-0">
+            <div class="fw-semibold" *ngIf="cotizacionCostoEstimado > 0"><i class="bi bi-truck-front-fill me-2 text-success" style="font-size:1.5rem;vertical-align:middle;"></i>  Envío estimado:
+                  ${{ cotizacionCostoEstimado | number:'1.2-2' }}<span *ngIf="cotizacionMoneda"> {{ cotizacionMoneda }}</span>
+            </div> 
+           <!-- <div *ngIf="entregaTipoSeleccionado?.codigo === 'retiro'></div>-->
+            <div class="fw-semibold" *ngIf="cotizacionCostoEstimado <= 0">Retiro sin cargo</div>
+            <small *ngIf="entregaTipoSeleccionado?.codigo === 'retiro'"><i class="bi bi-dot"></i> Retire sin cargo la mercadería en la sucursal, indique fecha y hora que desee, lo espereamos !</small>
+            
+            <div class="small" *ngIf="cotizacionCostoEstimado > 0 && cotizacionDistanciaKm !== null">Distancia: {{
+              cotizacionDistanciaKm | number:'1.1-1' }} km</div>
+            <div class="small"
+              *ngIf="cotizacionCostoEstimado > 0 && cotizacion.etaMinutos !== undefined && cotizacion.etaMinutos !== null">
+              ETA (mín): {{ cotizacion.etaMinutos }} min</div>
+            <div class="small"
+              *ngIf="cotizacionCostoEstimado > 0 && cotizacion.etaMaxima !== undefined && cotizacion.etaMaxima !== null">
+              ETA (máx): {{ cotizacion.etaMaxima }}</div>
+            <div class="small" *ngIf="cotizacionCostoEstimado > 0 && cotizacion.tiempoEstimadoHoras">ETA aprox: {{
+              cotizacion.tiempoEstimadoHoras }} hs</div>
+            <div class="small text-muted" *ngIf="cotizacion.metadata?.pricing as pricing">
+              <div *ngIf="pricing.costoBase !== undefined && pricing.costoBase !== null">Costo base: {{
+                pricing.costoBase | number:'1.2-2' }}</div>
+              <div *ngIf="pricing.costoPorPedido !== undefined && pricing.costoPorPedido !== null">Cargo por pedido: {{
+                pricing.costoPorPedido | number:'1.2-2' }}</div>
+              <div *ngIf="pricing.costoPorKm !== undefined && pricing.costoPorKm !== null">Costo por km: {{
+                pricing.costoPorKm | number:'1.2-2' }}</div>
+              <div *ngIf="pricing.costoAplicado !== undefined && pricing.costoAplicado !== null">Costo aplicado: {{
+                pricing.costoAplicado | number:'1.2-2' }}</div>
+            </div>
+            
+            <!-- Selección de fecha y horario de entrega si la opción lo requiere -->
+            <div *ngIf="!!entregaOpcionPermiteProgramar" class="mt-3">
+               <small *ngIf="entregaTipoSeleccionado?.codigo === 'retiro'"><strong><i class="bi bi-dot"></i> Indique fecha y hora, en la podemos enviar su pedido.</strong></small>
+              <div class="row g-2">
+                <div class="col-md-4">
+                  <label class="form-label small">
+                    <ng-container *ngIf="entregaTipoSeleccionado?.codigo === 'domicilio'; else retiroLabel">
+                      Entrega en domicilio
+                    </ng-container>
+                    <ng-template #retiroLabel>
+                      <ng-container *ngIf="entregaTipoSeleccionado?.codigo === 'retiro'; else defaultLabel">
+                        Retiro en sucursal
+                      </ng-container>
+                      <ng-template #defaultLabel>
+                      Fecha {{entregaTipoSeleccionado?.descripcion || 'no especificado'}}
+                      </ng-template>
+                    </ng-template>
+                  </label>
+                  <input type="date" class="form-control" [(ngModel)]="fechaProgramada" name="fechaProgramada" />
+                </div>
+                <ng-container *ngIf="entregaOpcionSeleccionada?.requiereHorario">
+                  <div class="col-md-4">
+                    <label class="form-label small">Horario desde</label>
+                    <input type="time" class="form-control" [(ngModel)]="horaVentanaDesde" name="horaVentanaDesde" />
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label small">Horario hasta</label>
+                    <input type="time" class="form-control" [(ngModel)]="horaVentanaHasta" name="horaVentanaHasta" />
+                  </div>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-outline-primary w-100 mt-3" type="button" (click)="confirmarEntrega()"
+              [disabled]="!cotizacion || entregaConfirmada">
+              Confirmar método
+            </button>
+
+        </ng-container>
+      </div>
+          </ng-container>
+        </div>
+      </section>
+
+
+              <section class="card shadow-sm" *ngIf="items.length">
+                  <ng-container *ngIf="entregaConfirmada && items.length">
+                    <div class="card-header">
+                      <h5 class="mb-0"><i class="bi bi-credit-card-2-front me-2 text-warning"></i>Medio de pago</h5>
+                    </div>
+                    <div class="card-body">
+                      <div *ngIf="formasPagoLoading" class="text-muted small">Cargando formas de pago...</div>
+                      <div *ngIf="!formasPagoLoading && formasPagoError" class="alert alert-warning">{{ formasPagoError }}</div>
+                      <ng-container *ngIf="!formasPagoLoading && !formasPagoError">
+                        <ng-container *ngIf="formasPagoDisponibles.length; else sinFormasPagoGlobal">
+                          <div class="list-group list-group-flush">
+                            <label class="list-group-item d-flex gap-3 align-items-start" *ngFor="let forma of formasPagoDisponibles" [class.disabled]="!esFormaPagoSeleccionable(forma)" [style.pointer-events]="!esFormaPagoSeleccionable(forma) ? 'none' : 'auto'">
+                              <input *ngIf="forma.codigo !== 'cuenta-corriente' || motivoCuentaCorrienteDeshabilitada()" class="form-check-input mt-1" type="radio" [value]="forma.codigo" [formControl]="metodoPagoControl" [disabled]="!esFormaPagoSeleccionable(forma)" />
+                              <div class="flex-grow-1" *ngIf="forma.codigo !== 'cuenta-corriente' || motivoCuentaCorrienteDeshabilitada()" >
+                                <div class="d-flex justify-content-between align-items-center">
+                                  <span class="fw-semibold">{{ forma.nombre }}</span>
+                                  <span class="badge bg-info-subtle text-info" *ngIf="forma.permiteCuotas">Permite cuotas</span>
+                                </div>
+                                <div class="small text-muted">{{ forma.descripcion || forma.tipo || 'Sin descripción disponible' }}</div>
+                                <div class="small text-muted" *ngIf="forma.requiereReferencia">Requiere referencia al confirmar</div>
+                                <div class="small text-success mt-1" *ngIf="forma.codigo === 'cuenta-corriente' && esFormaPagoSeleccionable(forma)">
+                                  <i class="bi bi-check-circle-fill me-1"></i> {{ mensajeCuentaCorrienteHabilitada() }} 
+                                </div>
+                              
+                              </div>
+                            </label>
+                          </div>
+
+                        </ng-container>
+                        <ng-template #sinFormasPagoGlobal>
+                          <div class="alert alert-info mb-0">No hay formas de pago habilitadas para esta app.</div>
+                        </ng-template>
+                      </ng-container>
+                      <div *ngIf="mensajeEntrega" >
+                        <ng-container *ngIf="statusCodeConfirmacion === 400 || statusCodeConfirmacion === 500; else successMsg">
+                          <div class="alert alert-danger mt-3 animate__animated animate__shakeX" style="background-color:#fff0f0;border-color:#ff3b3b;color:#c00;font-weight:bold;box-shadow:0 0 8px 2px #ff3b3b80;">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            {{ mensajeEntrega }}
+                          </div>
+                        </ng-container>
+                        <ng-template #successMsg>
+                          <div class="alert alert-success mt-3">
+                            <i class="bi bi-check-circle-fill me-2 text-success"></i>
+                            {{ mensajeEntrega }}
+                          </div>
+                        </ng-template>
+                      </div>
+                      <div *ngIf="errorPago" class="alert alert-danger mt-3 animate__animated animate__shakeX" style="background-color:#fff0f0;border-color:#ff3b3b;color:#c00;font-weight:bold;box-shadow:0 0 8px 2px #ff3b3b80;">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {{ errorPago }}
+                      </div>
+                      <button class="btn btn-success w-100 mt-3" type="button" (click)="confirmarPedido()" [disabled]="!puedeConfirmarPedido || procesandoPedido">
+                        <span *ngIf="procesandoPedido" class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                        Confirmar pedido
+                      </button>
+                      <button *ngIf="entregaConfirmada" class="btn btn-outline-danger w-100 mt-2" type="button" (click)="cancelarCompra()">
+                    Cancelar compra
+                  </button>
+                    </div>
+                  </ng-container>
+              </section>
+
+      <section *ngIf="pedidoCreado" class="alert alert-success mb-0">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+          <div>
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+              <h6 class="mb-0">Su Compra #{{ pedidoCreado.id }} confirmado</h6>
+              <span *ngIf="pedidoEnvioRegistrado?.envioEstado?.descripcion" class="badge bg-success text-uppercase">
+                {{ pedidoEnvioRegistrado?.envioEstado?.descripcion }}
+              </span>
+            </div>
+            <p class="mb-1">Recordá completar el pago mediante {{ formaPagoSeleccionada ? formaPagoSeleccionada.nombre : pedidoCreado.metodoPago }}<span *ngIf="formaPagoSeleccionada && formaPagoSeleccionada.requiereReferencia && metodoPagoReferenciaControl.value"> (ref: {{ metodoPagoReferenciaControl.value }})</span>.</p>
+            <p class="mb-0 small text-muted" *ngIf="pedidoEnvioRegistrado?.envioEstado?.descripcion">Estado del envío: {{ pedidoEnvioRegistrado?.envioEstado?.descripcion }}</p>
+          </div>
+          <a class="btn btn-outline-light text-success" [routerLink]="['/pedido', pedidoCreado.id]">Ver detalle</a>
+        </div>
+      </section>
+
+    </ng-container>
+  </div>
+</div>
+
+      <footer class="layout-footer mt-5 py-3 bg-light border-top">
+      <!-- Modal de pago -->
+      <div class="modal fade show" tabindex="-1" style="display: block; background: rgba(0,0,0,0.3);" *ngIf="mostrarModalPago">
+        <div class="modal-dialog modal-dialog-centered modal-lg custom-modal-narrow">
+          <div class="modal-content" style="max-height: 80vh; min-width: 420px; overflow: hidden;">
+            <div class="modal-header py-2">
+              <h5 class="modal-title fs-5"><i class="bi bi-credit-card-2-front me-2 text-warning"></i>Confirmar pago</h5>
+              <button type="button" class="btn-close" (click)="mostrarModalPago = false" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body py-3" style="overflow-y: auto; max-height: 60vh;">
+              <div class="mb-2 text-center fw-bold fs-5 text-primary">CONTINUAR CON EL PAGO</div>
+              <ng-container *ngIf="formaPagoSeleccionada?.codigo === 'mercadopago'">
+                <div *ngIf="mercadoPagoMensaje" class="alert alert-info text-center py-1 my-2">
+                  {{ mercadoPagoMensaje }}
+                </div>
+                <div class="d-flex justify-content-center gap-1 flex-wrap mb-2">
+                  <button class="btn btn-success btn-xs btn-sm" type="button" (click)="simularResultadoMercadoPago('aprobado')">Aprobado</button>
+                  <button class="btn btn-danger btn-xs btn-sm" type="button" (click)="simularResultadoMercadoPago('rechazado')">Rechazado</button>
+                  <button class="btn btn-warning btn-xs btn-sm" type="button" (click)="simularResultadoMercadoPago('pendiente')">Pendiente</button>
+                </div>
+                <div *ngIf="!mercadoPagoWidgetLoaded" class="alert alert-secondary text-center py-1 my-2">
+                  Si el widget no carga, usa la simulación.
+                </div>
+                <div id="mercadoPagoEmbed" class="text-center"></div>
+                <div *ngIf="mercadoPagoResultado" class="mt-2 alert py-1" [ngClass]="{
+                    'alert-success': mercadoPagoResultado === 'aprobado',
+                    'alert-danger': mercadoPagoResultado === 'rechazado',
+                    'alert-warning': mercadoPagoResultado === 'pendiente'
+                  }">
+                  {{ mercadoPagoMensaje }}
+                </div>
+                <div *ngIf="mensajeEntrega" class="mt-2 alert alert-success text-center py-1">
+                  <span class="badge bg-success rounded-pill me-2">
+                    <i class="bi bi-truck me-1"></i> Preparación
+                  </span>
+                  {{ mensajeEntrega }}
+                </div>
+              </ng-container>
+              <ng-container *ngIf="formaPagoSeleccionada?.codigo === 'prisma'">
+                <div id="prismaEmbed"></div>
+              </ng-container>
+              <ng-container *ngIf="formaPagoSeleccionada?.codigo !== 'mercadopago' && formaPagoSeleccionada?.codigo !== 'prisma'">
+                <div>cuenta corriente / otro medio</div>
+              </ng-container>
+            </div>
+            <div class="modal-footer py-2">
+              <button type="button" class="btn btn-secondary btn-sm" (click)="cerrarModalPago()">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+  <div class="container text-center text-muted small">
+    SuperShopCart
+  </div>
+</footer>
+
+<app-toast></app-toast>

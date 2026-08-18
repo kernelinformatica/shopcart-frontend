@@ -1,0 +1,108 @@
+<section class="catalogo-section container mb-5">
+  <div class="productocategoria-toolbar d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+    <div>
+      <h2 class="mb-1 fw-bold">
+        {{ mostrarTodos ? 'Todos los productos' : (productoCategoriaNombre ? ('Productos: ' + productoCategoriaNombre) : 'Productos de la categoría') }}
+      </h2>
+      <ng-container *ngFor="let cat of categoriaBreadcrumb; let last = last">
+        <span class="mx-1">Inicio</span>
+        <span class="mx-1"> / </span>
+        <span [class.fw-semibold]="last">{{ cat }}</span>
+      </ng-container>
+      <span *ngIf="!mostrarTodos" class="categoria-productos-badge text-success ms-2">
+        <span class="small">Cantidad de productos encontrados:</span>
+        <span class="badge bg-success align-middle">{{ productos.length }}</span>
+      </span>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <app-producto-vista-selector
+        [modoVista]="modoVistaProducto"
+        (modoVistaChange)="setModoVistaProducto($event)">
+      </app-producto-vista-selector>
+      <button *ngIf="filtrosColapsados" class="btn btn-outline-primary btn-sm ms-2" type="button" (click)="toggleFiltrosColapsados()">
+        <i class="bi bi-funnel"></i> Filtros
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="text-center my-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+  </div>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+  <div *ngIf="!loading && !error && !productos.length" class="alert alert-info">
+    No hay productos disponibles para esta categoría.
+  </div>
+
+  <div class="row g-4 filtros-layout" [class.filtros-plegados]="filtrosColapsados" *ngIf="!loading && !error && productos.length">
+    <aside class="col-12 col-lg-3 filtros-aside" [class.filtros-aside-plegado]="filtrosColapsados">
+      <app-filtros-panel
+        [filtroNombre]="filtroNombre"
+        [precioMinFiltro]="precioMinFiltro"
+        [precioMaxFiltro]="precioMaxFiltro"
+        [marcasDisponibles]="marcasDisponibles"
+        [marcasSeleccionadas]="marcasSeleccionadas"
+        [categoriasDisponibles]="categoriasDisponibles"
+        [categoriasSeleccionadas]="categoriasSeleccionadas"
+        [filtrosColapsados]="filtrosColapsados"
+        [hayFiltrosActivos]="hayFiltrosActivos"
+        (filtroNombreChange)="filtroNombre = $event; aplicarFiltros()"
+        (precioMinFiltroChange)="precioMinFiltro = $event; aplicarFiltros()"
+        (precioMaxFiltroChange)="precioMaxFiltro = $event; aplicarFiltros()"
+        (marcasSeleccionadasChange)="marcasSeleccionadas = $event; aplicarFiltros()"
+        (categoriasSeleccionadasChange)="categoriasSeleccionadas = $event; aplicarFiltros()"
+        (limpiarFiltros)="limpiarFiltros()"
+        (toggleFiltrosColapsados)="toggleFiltrosColapsados()"
+      ></app-filtros-panel>
+      <!-- Botón flotante eliminado, solo queda el botón en la barra superior -->
+    </aside>
+    <div [ngClass]="filtrosColapsados ? 'col-12' : 'col-12 col-lg-9'">
+      <div class="row g-4">
+        <ng-container *ngFor="let producto of productosFiltrados">
+          <div class="col-12" *ngIf="modoVistaProducto === 'lista'">
+            <app-producto-item-lista
+              [producto]="producto"
+              (agregar)="agregarCarrito($event)"
+              [modo]="modoVistaProducto">
+            </app-producto-item-lista>
+          </div>
+          <div class="col-12 col-md-6 col-lg-4" *ngIf="modoVistaProducto === 'grande'">
+            <div style="cursor:pointer;display:block" (click)="irADetalleProducto(producto)">
+                <ng-container *ngIf="getMarcaLogoPath(producto) && getMarcaNombre(producto).toLowerCase() !== 'sin marca' && getMarcaNombre(producto) !== ''">
+                  <app-producto-item
+                    [producto]="producto"
+                    [favoritos]="favoritos"
+                    (toggleFavorito)="toggleFavorito($event)"
+                    (agregarCarrito)="agregarCarrito($event, producto)"
+                    (setRating)="setRating($event)">
+                  </app-producto-item>
+                </ng-container>
+                <ng-container *ngIf="!getMarcaLogoPath(producto) || getMarcaNombre(producto).toLowerCase() === 'sin marca' || getMarcaNombre(producto) === ''">
+                  <app-producto-item
+                    [producto]="producto"
+                    [favoritos]="favoritos"
+                    (toggleFavorito)="toggleFavorito($event)"
+                    (agregarCarrito)="agregarCarrito($event, producto)"
+                    (setRating)="setRating($event)">
+                  </app-producto-item>
+                </ng-container>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6 col-md-4 col-lg-3" *ngIf="modoVistaProducto === 'compacta'">
+            <app-producto-item-mini
+              [producto]="producto"
+              [favoritos]="favoritos"
+              (toggleFavorito)="toggleFavorito($event)"
+              (agregar)="agregarCarrito($event)">
+            </app-producto-item-mini>
+          </div>
+        </ng-container>
+      </div>
+      <div *ngIf="!productosFiltrados.length && !loading && !error" class="alert alert-info mt-4">
+        No hay productos para mostrar con los filtros actuales.
+      </div>
+    </div>
+  </div>
+</section>

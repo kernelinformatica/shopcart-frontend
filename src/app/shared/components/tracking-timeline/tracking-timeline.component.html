@@ -1,0 +1,32 @@
+<div class="timeline">
+  <div *ngFor="let evento of historial; let last = last" class="timeline-event" [class.current]="evento.estado === estadoActual" [class.pasado]="historial.length > 1 && evento.estado !== estadoActual">
+    <div 
+      class="timeline-dot"
+      [ngClass]="{
+        'dot-preparacion': estadoIncluye(evento.estado, 'preparacion'),
+        'dot-demorado': estadoIncluye(evento.estado, 'demorado'),
+        'dot-enruta': estadoIncluye(evento.estado, 'ruta'),
+        'dot-entregado': estadoIncluye(evento.estado, 'entregado') || estadoIncluye(evento.estado, 'confirmado')
+      }"
+    >
+      <ng-container *ngIf="estadoIncluye(evento.estado, 'preparacion'); else camionIcono">
+        <i class="bi bi-gear-fill"></i>
+      </ng-container>
+      <ng-template #camionIcono>
+        <i class="bi bi-truck"></i>
+      </ng-template>
+    </div>
+    <div class="timeline-content">
+      <div class="timeline-date">{{ evento.fecha | date:'short' }}</div>
+      <div class="timeline-desc">
+        {{ getEstadoTexto(evento.estado, evento.descripcion) }}
+      </div>
+      <div *ngIf="evento.comentario" class="timeline-comment">{{ evento.comentario }}</div>
+      <div *ngIf="evento.detalle" class="timeline-detalle ms-2">
+        <span class="badge bg-light text-secondary border small" tabindex="0" data-bs-toggle="tooltip" [attr.title]="evento.detalle">
+          <i class="bi bi-info-circle"></i> Detalle
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

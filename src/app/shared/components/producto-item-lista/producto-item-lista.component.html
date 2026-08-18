@@ -1,0 +1,80 @@
+<ng-container *ngIf="producto">
+  <!-- Vista GRANDE -->
+  <div *ngIf="modo === 'grande'" class="producto-grande-card card mb-3 shadow-sm" style="max-width: 100%;">
+    <div class="row g-0 align-items-center">
+      <div class="col-4 col-md-3 text-center producto-lista-media-col">
+        <div class="producto-lista-media-frame producto-lista-media-frame-lg">
+          <img [src]="getProductoImagen(producto)" class="img-fluid rounded producto-lista-media-img" alt="{{ producto.nombre || '' }}" (click)="verProducto(producto, $event)">
+        </div>
+      </div>
+      <div class="col-8 col-md-7">
+        <div class="card-body py-2 px-3">
+          <h5 class="card-title fw-bold mb-1 text-truncate" title="{{ producto.nombre || '' }}">{{ producto.nombre || '' }}</h5>
+          <div class="text-muted small mb-1 text-truncate" *ngIf="producto.marca?.nombre">{{ producto.marca.nombre }}</div>
+          <div class="text-muted small mb-2 text-truncate" *ngIf="producto.descripcion">{{ producto.descripcion }}</div>
+          <div class="fw-bold text-success fs-5 mb-1" *ngIf="producto.precioDescuento != null && producto.precio != null && producto.precioDescuento < producto.precio">
+            ${{ producto.precioDescuento | number:'1.2-2' }}
+            <span class="text-decoration-line-through text-danger ms-2 fs-6 align-middle" *ngIf="producto.precio != null">${{ producto.precio | number:'1.2-2' }}</span>
+          </div>
+          <div class="fw-bold fs-5 mb-1" *ngIf="(producto.precio != null && (!producto.precioDescuento || producto.precioDescuento >= producto.precio))">${{ producto.precio | number:'1.2-2' }}</div>
+        </div>
+      </div>
+      <div class="col-12 col-md-2 text-center">
+        <button *ngIf="productoTieneImpuestos(producto)" class="btn btn-success w-100 mt-2" (click)="onAgregar()" title="Agregar al carrito">
+          <i class="bi bi-cart-plus me-1"></i> 
+        </button>
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- Vista COMPACTA -->
+  <div *ngIf="modo === 'compacta'" class="producto-compacta-card card mb-2 shadow-sm" style="max-width: 100%;">
+    <div class="row g-0 align-items-center">
+      <div class="col-3 text-center producto-lista-media-col">
+        <div class="producto-lista-media-frame producto-lista-media-frame-sm">
+          <img [src]="getProductoImagen(producto)" class="img-fluid rounded producto-lista-media-img" alt="{{ producto.nombre || '' }}" (click)="verProducto(producto, $event)">
+        </div>
+      </div>
+      <div class="col-7">
+        <div class="card-body py-2 px-2">
+          <div class="fw-semibold text-truncate" title="{{ producto.nombre || '' }}">{{ producto.nombre || '' }}</div>
+          <div class="text-muted small text-truncate" *ngIf="producto.marca?.nombre">{{ producto.marca.nombre }}</div>
+          <div class="fw-bold text-success small" *ngIf="producto.precioDescuento != null && producto.precio != null && producto.precioDescuento < producto.precio">
+            ${{ producto.precioDescuento | number:'1.2-2' }}
+            <span class="text-decoration-line-through text-danger ms-1" *ngIf="producto.precio != null">${{ producto.precio | number:'1.2-2' }}</span>
+          </div>
+          <div class="fw-bold small" *ngIf="(producto.precio != null && (!producto.precioDescuento || producto.precioDescuento >= producto.precio))">${{ producto.precio | number:'1.2-2' }}</div>
+        </div>
+      </div>
+      <div class="col-2 text-center">
+        <button *ngIf="productoTieneImpuestos(producto)" class="btn btn-outline-success btn-sm mt-2" (click)="onAgregar()" title="Agregar al carrito">
+          <i class="bi bi-cart-plus"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vista LISTA (la original) -->
+  <div *ngIf="modo === 'lista'" class="producto-lista-card d-flex align-items-center gap-2 p-2 border rounded shadow-sm" (click)="verProducto(producto, $event)">
+    <div class="producto-lista-thumb-frame">
+      <img [src]="getProductoImagen(producto)" class="producto-lista-img rounded" alt="{{ producto.nombre || '' }}">
+    </div>
+    <div class="flex-grow-1 overflow-hidden">
+      <div class="fw-semibold text-truncate" title="{{ producto.nombre || '' }}">{{ producto.nombre || '' }}</div>
+      <div class="text-muted small text-truncate" *ngIf="producto.marca?.nombre">{{ producto.marca.nombre }}</div>
+      <div class="text-muted small text-truncate" *ngIf="producto.descripcion">{{ producto.descripcion }}</div>
+      <div class="fw-bold text-success small" *ngIf="producto.precioDescuento != null && producto.precio != null && producto.precioDescuento < producto.precio">
+        ${{ producto.precioDescuento | number:'1.2-2' }}
+        <span class="text-decoration-line-through text-danger ms-1" *ngIf="producto.precio != null">${{ producto.precio | number:'1.2-2' }}</span>
+      </div>
+      <div class="fw-bold small" *ngIf="producto.precio != null && (!producto.precioDescuento || producto.precioDescuento >= producto.precio)">${{ producto.precio | number:'1.2-2' }}</div>
+    </div>
+    <button *ngIf="productoTieneImpuestos(producto)"
+      style="cursor:pointer"
+      class="p-0 border-0 bg-transparent shadow-none"
+      (click)="onAgregar()">
+      <i class="bi bi-cart-plus fs-4 text-primary"></i>
+    </button>
+  </div>
+</ng-container>

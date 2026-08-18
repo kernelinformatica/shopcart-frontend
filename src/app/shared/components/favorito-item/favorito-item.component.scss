@@ -1,0 +1,38 @@
+.card-img-top.producto-oferta-img {
+  object-fit: cover;
+  height: 180px;
+}
+.producto-card {
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+  position: relative;
+}
+.producto-card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.08);
+}
+.card-img-top.producto-oferta-img {
+  object-fit: cover;
+  height: 180px;
+}
+.marca-overlay {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  font-size: 1.15em;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: rgba(255,255,255,0.92);
+}
+.marca-logo-badge {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  margin-right: 0.25rem;
+  background: #fff;
+  border-radius: 50%;
+  border: 1px solid #eee;
+}

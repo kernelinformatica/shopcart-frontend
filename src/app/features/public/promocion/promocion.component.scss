@@ -1,0 +1,108 @@
+.promo-page {
+	.promo-intro {
+		border-radius: 14px;
+	}
+
+	.promo-vigencia .badge {
+		font-weight: 500;
+		font-size: 0.88rem;
+	}
+
+	.promo-header {
+		border-radius: 16px;
+	}
+
+	.promo-cover {
+		width: 100%;
+		height: 100%;
+		min-height: 180px;
+		max-height: 280px;
+		object-fit: cover;
+		display: block;
+	}
+
+	.promo-producto-card {
+		border-radius: 14px;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.marca-overlay {
+		position: absolute;
+		top: 0.6rem;
+		right: 0.6rem;
+		z-index: 2;
+	}
+
+	.producto-oferta-img {
+		width: 100%;
+		height: auto;
+		aspect-ratio: 4 / 3;
+		object-fit: cover;
+		object-position: center;
+		background-color: transparent;
+	}
+
+	.producto-card-sin-imagen .card-body {
+		padding-top: 1rem;
+	}
+
+	.precio {
+		font-weight: 700;
+		font-size: 1rem;
+	}
+
+	.marca-logo-badge {
+		width: 34px;
+		height: 34px;
+		border-radius: 50%;
+		object-fit: contain;
+		background: #fff;
+	}
+}
+
+#detalleProductoModal {
+	.relacionados-grid {
+		display: grid;
+		gap: 0.5rem;
+	}
+
+	.relacionado-box {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding: 0.5rem 0.625rem;
+		border: 1px solid #e9ecef;
+		border-radius: 0.65rem;
+		background: #fff;
+	}
+
+	.relacionado-thumb {
+		width: 40px;
+		height: 40px;
+		border-radius: 0.4rem;
+		object-fit: cover;
+		flex-shrink: 0;
+	}
+
+	.min-w-0 {
+		min-width: 0;
+	}
+
+	.marca-logo-badge {
+		width: auto;
+		height: 34px;
+		max-width: 72px;
+		display: block;
+		border-radius: 0;
+		background: transparent;
+	}
+
+	.marca-modal-solo-logo {
+		padding: 0;
+		border: 0;
+		background: transparent;
+		box-shadow: none;
+	}
+}

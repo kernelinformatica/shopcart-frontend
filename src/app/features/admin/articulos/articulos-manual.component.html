@@ -1,0 +1,67 @@
+<section class="container py-3 articulos-manual">
+  <div class="card shadow-sm mb-4">
+     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <p class="eyebrow mb-1">Administración de artículos</p>
+        <h4 class="mb-0">{{ editandoId ? 'Editar artículo ' + editandoId : 'Carga manual de artículo' }}</h4>
+      </div>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" routerLink="/admin/articulos">Volver al listado</a>
+        <button class="btn btn-outline-primary" type="button" (click)="limpiar()">Limpiar</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div *ngIf="cargando" class="text-muted py-3">Cargando formulario...</div>
+      <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+      <div *ngIf="mensaje" class="alert alert-success">{{ mensaje }}</div>
+  
+      <form [formGroup]="formulario" (ngSubmit)="guardar()" class="row g-3" *ngIf="!cargando">
+        <div class="col-12 col-md-6">
+          <label class="form-label">Nombre</label>
+          <input class="form-control" formControlName="nombre" />
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label">Marca</label>
+          <input class="form-control" formControlName="marca" />
+        </div>
+        <div class="col-12">
+          <label class="form-label">Descripción</label>
+          <textarea class="form-control" rows="4" formControlName="descripcion"></textarea>
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label">Código de barra</label>
+          <input class="form-control" formControlName="codigoBarra" />
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label">Código interno</label>
+          <input type="number"  class="form-control" formControlName="codigoInterno" />
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label">Stock</label>
+          <input type="number" class="form-control" formControlName="stock" />
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label">Categoría</label>
+          <select class="form-select" formControlName="categoriaId">
+            <option [ngValue]="null">Sin categoría</option>
+            <option *ngFor="let categoria of categorias" [ngValue]="categoria.id">{{ categoria.nombre }}</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label">Lista de precios</label>
+          <input type="number" class="form-control" formControlName="listaPrecioId" placeholder="ID de lista" />
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label">Precio</label>
+          <input type="number" class="form-control" formControlName="precio" />
+        </div>
+        <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+          <button class="btn btn-outline-secondary" type="button" (click)="cancelar()">Cancelar</button>
+          <button class="btn btn-primary" type="submit" [disabled]="guardando">
+            {{ guardando ? 'Guardando...' : (editandoId ? 'Actualizar artículo' : 'Guardar artículo') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>

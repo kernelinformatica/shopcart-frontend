@@ -1,0 +1,72 @@
+.mas-vendido-mini {
+  z-index: 4;
+  pointer-events: none;
+}
+.user-rating-mini .bi {
+  transition: color 0.15s;
+}
+.user-rating-mini .bi:hover,
+.user-rating-mini .bi:focus {
+  color: #ffb300 !important;
+  text-shadow: 0 1px 4px #0002;
+}
+.user-rating-mini .pointer-events-none {
+  pointer-events: none;
+  opacity: 0.5;
+}
+// Marca encima de la imagen (mini)
+.marca-overlay-mini {
+  z-index: 3;
+  pointer-events: none;
+}
+.marca-logo-badge-mini {
+  height: 18px;
+  max-width: 32px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 0.25em;
+  box-shadow: 0 1px 3px #0001;
+}
+.producto-mini-card {
+  min-width: 120px;
+  max-width: 220px;
+  width: 100%;
+  background: #fff;
+  transition: box-shadow 0.2s;
+  cursor: pointer;
+  padding: 0.18rem 0.18rem 0.12rem 0.18rem !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+}
+
+// Reduce el gap entre cards en el grid de la vista reducida
+:host ::ng-deep .row.g-4 > [class^='col-'],
+:host ::ng-deep .row.g-4 > [class*=' col-'] {
+  padding-left: 0.18rem !important;
+  padding-right: 0.18rem !important;
+  padding-top: 0.18rem !important;
+  padding-bottom: 0.18rem !important;
+}
+.producto-mini-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border: 1px solid #eee;
+}
+
+.producto-mini-media {
+  position: relative;
+}
+
+.producto-mini-media-frame {
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0.35rem;
+  background: #fff;
+}
