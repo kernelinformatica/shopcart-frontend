@@ -31,7 +31,6 @@ export const routes: Routes = [
       { path: 'promociones', loadChildren: () => import('./features/public/promocion/promocion.module').then(m => m.PromocionModule) },
       { path: 'tarjetas', loadChildren: () => import('./features/public/tarjeta/tarjeta.module').then(m => m.TarjetaModule) },
       { path: 'cuenta-corriente', loadChildren: () => import('./features/public/cuenta-corriente/cuenta-corriente.module').then(m => m.CuentaCorrienteModule) },
-      { path: 'admin', loadChildren: () => import('./features/admin/admin.module').then(m => m.AdminModule) },
       { path: 'todos-los-productos', component: ProductoListComponent, data: { mostrarTodos: true } },
       { path: ':rubroSlug/:subrubroSlug', component: ProductoCategoriaProductosComponent }
     ]

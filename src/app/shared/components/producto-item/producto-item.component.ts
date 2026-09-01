@@ -190,7 +190,7 @@ verProducto(producto: any, event?: Event) {
     if (!this.puedeEditarArticulos || !producto?.id) {
       return;
     }
-    this.router.navigate(['/admin/articulos/manual', producto.id]);
+    this.router.navigate(['/dashboard']);
   }
   getStockLabel(producto: any): string {
     const stock = producto?.stock;

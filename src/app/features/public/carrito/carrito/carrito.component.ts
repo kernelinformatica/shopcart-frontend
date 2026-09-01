@@ -724,7 +724,7 @@ export class CarritoComponent implements OnInit, OnDestroy {
   }
 
   irAConfigOrigenEnvio(): void {
-    this.router.navigate(['/admin']);
+    this.router.navigate(['/dashboard']);
   }
 
   confirmarEntrega(): void {
